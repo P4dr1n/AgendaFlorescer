@@ -22,8 +22,8 @@ export default function RegisterScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
+    <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" />
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
@@ -127,8 +127,8 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </LinearGradient>
     </SafeAreaView>
+      </LinearGradient>
   )
 }
 

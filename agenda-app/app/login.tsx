@@ -19,8 +19,8 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
       <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" />
 
         <View style={styles.content}>
@@ -67,8 +67,8 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
     </SafeAreaView>
+      </LinearGradient>
   )
 }
 
