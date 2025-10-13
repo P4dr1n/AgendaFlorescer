@@ -11,7 +11,7 @@ export default function LoginScreen() {
   const router = useRouter()
 
   const handleLogin = () => {
-    router.replace("/(tabs)/home")
+    router.replace("/(telasCliente)/home")
   }
 
   const handleNavigateToRegister = () => {
