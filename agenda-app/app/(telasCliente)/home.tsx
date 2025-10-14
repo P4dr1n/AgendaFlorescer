@@ -22,7 +22,7 @@ export default function HomeClienteScreen() {
   // Handlers de ações e navegação
   const handleRemarcar = () => router.push("/(telasCliente)/remarcar")
   const handleComoChegar = () => {
-    const url = "https://www.google.com/maps/search/?api=1&query=Florescer%20Estetica"
+    const url = "https://maps.app.goo.gl/fUeP6FfCUM6h3dXVA"
     Linking.openURL(url)
   }
   const handleCancelar = () => {
