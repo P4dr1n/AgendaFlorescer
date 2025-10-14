@@ -4,8 +4,7 @@ import { useMemo } from "react"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-
+import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, Alert, Linking } from "react-native"
 
 const SCREEN_WIDTH = Dimensions.get("window").width
 const H_PADDING = 24 
@@ -20,6 +19,26 @@ export default function HomeClienteScreen() {
     [],
   )
 
+  // Handlers de ações e navegação
+  const handleRemarcar = () => router.push("/(telasCliente)/remarcar")
+  const handleComoChegar = () => {
+    const url = "https://www.google.com/maps/search/?api=1&query=Florescer%20Estetica"
+    Linking.openURL(url)
+  }
+  const handleCancelar = () => {
+    Alert.alert("Cancelar agendamento", "Deseja cancelar seu agendamento?", [
+      { text: "Não" },
+      { text: "Sim", style: "destructive", onPress: () => {/* TODO: integrar com API para cancelar */} },
+    ])
+  }
+
+  const gotoAgendar = () => router.push("/(telasCliente)/agendar")
+  const gotoAgendamentos = () => router.push("/(telasCliente)/agendamentos")
+  const gotoServicos = () => router.push("/(telasCliente)/servicos")
+  const gotoPromocoes = () => router.push("/(telasCliente)/promocoes")
+  const gotoPerfil = () => router.push("/(telasCliente)/perfil")
+  const gotoNotificacoes = () => router.push("/(telasCliente)/notificacoes")
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
@@ -29,7 +48,7 @@ export default function HomeClienteScreen() {
             <Text style={styles.hello}>Olá,</Text>
             <Text style={styles.userName}>Cliente</Text>
           </View>
-          <TouchableOpacity style={styles.iconButton} onPress={() => {}} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.iconButton} onPress={gotoNotificacoes} activeOpacity={0.8}>
             <MaterialCommunityIcons name="bell-outline" size={24} color="#FF4081" />
           </TouchableOpacity>
         </View>
@@ -74,32 +93,32 @@ export default function HomeClienteScreen() {
           </View>
 
           <View style={styles.cardActions}>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={() => {}}>
+            <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={handleRemarcar}>
               <MaterialCommunityIcons name="calendar-edit" size={16} color="#FF4081" />
               <Text style={styles.actionSecondaryText}>Remarcar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionPrimary]} onPress={() => {}}>
+            <TouchableOpacity style={[styles.actionBtn, styles.actionPrimary]} onPress={handleComoChegar}>
               <MaterialCommunityIcons name="map-marker" size={16} color="#FFFFFF" />
               <Text style={styles.actionPrimaryText}>Como chegar</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => {}}>
+          <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelar}>
             <Text style={styles.cancelText}>Cancelar agendamento</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.primaryCta} onPress={() => {}} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.primaryCta} onPress={gotoAgendar} activeOpacity={0.9}>
           <MaterialCommunityIcons name="plus-circle" size={24} color="#FFFFFF" />
           <Text style={styles.primaryCtaText}>Agendar Novo Horário</Text>
         </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>Acesso Rápido</Text>
         <View style={styles.quickGrid}>
-          <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={() => {}} />
-          <QuickItem icon="spa" label="Nossos Serviços" onPress={() => {}} />
-          <QuickItem icon="tag" label="Promoções" onPress={() => {}} />
-          <QuickItem icon="account-circle" label="Meu Perfil" onPress={() => {}} />
+          <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={gotoAgendamentos} />
+          <QuickItem icon="spa" label="Nossos Serviços" onPress={gotoServicos} />
+          <QuickItem icon="tag" label="Promoções" onPress={gotoPromocoes} />
+          <QuickItem icon="account-circle" label="Meu Perfil" onPress={gotoPerfil} />
         </View>
       </ScrollView>
     </SafeAreaView>
