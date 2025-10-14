@@ -6,9 +6,9 @@ import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
-// Compute item width to guarantee 2 columns regardless of device
+
 const SCREEN_WIDTH = Dimensions.get("window").width
-const H_PADDING = 24 // matches content paddingHorizontal
+const H_PADDING = 24 
 const GRID_GAP = 12
 const ITEM_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GRID_GAP) / 2)
 
