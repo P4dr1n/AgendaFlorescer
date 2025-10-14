@@ -32,3 +32,4 @@ Thumbs.db
 
 # Arquivos de Teste (opcional, mas recomendado)
 coverage/
+/src/generated/prisma

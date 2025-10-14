@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  usuario   String   @unique
+  email     String   @unique
+  senhaHash String
+  telefone  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ Relação: Um utilizador pode ter vários agendamentos
+  agendamentos Agendamento[]
+}
+
+// ✅ Novo Modelo: Servico
+// Define os serviços oferecidos pela estética.
+model Servico {
+  id        String   @id @default(uuid())
+  nome      String
+  descricao String?
+  preco     Float // Usamos Float para valores monetários
+  duracao   Int // Duração em minutos
+
+  // ✅ Relação: Um serviço pode estar em vários agendamentos
+  agendamentos Agendamento[]
+}
+
+// ✅ Novo Modelo: Agendamento
+// O coração da nossa aplicação.
+model Agendamento {
+  id        String   @id @default(uuid())
+  data      DateTime // A data e hora do agendamento
+  status    String   @default("PENDENTE") // Ex: PENDENTE, CONFIRMADO, CANCELADO
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // ✅ Relação com Utilizador (Cliente)
+  clienteId String
+  cliente   User   @relation(fields: [clienteId], references: [id])
+
+  // ✅ Relação com Serviço
+  servicoId String
+  servico   Servico @relation(fields: [servicoId], references: [id])
+}
