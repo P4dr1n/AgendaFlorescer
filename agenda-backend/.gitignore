@@ -1,0 +1,34 @@
+# Arquivos de Log
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependências
+# A pasta node_modules é gerada ao executar 'npm install'
+node_modules/
+
+# Saída do TypeScript
+# A pasta 'dist' contém o código JavaScript compilado.
+dist/
+*.tsbuildinfo
+
+# Arquivos de Ambiente
+# Nunca envie arquivos .env para o repositório, pois eles contêm segredos!
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Configurações de Editores
+.vscode/
+.idea/
+
+# Arquivos de Teste (opcional, mas recomendado)
+coverage/
