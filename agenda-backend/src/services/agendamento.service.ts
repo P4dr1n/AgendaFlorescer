@@ -4,30 +4,55 @@ import { PrismaClient, Agendamento } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Interface para definir a "forma" dos dados que a função 'criar' espera receber.
-// É uma boa prática para clarificar as entradas das suas funções.
 interface CriarAgendamentoDTO {
   clienteId: string;
   servicoId: string;
-  data: string; // A data virá como uma string no formato ISO (ex: "2025-12-10T10:00:00.000Z")
+  data: string;
 }
 
 export class AgendamentoService {
-  /**
-   * Cria um novo agendamento para um cliente no banco de dados.
-   * @param dados - Os dados necessários para criar o agendamento.
-   * @returns O objeto do agendamento criado.
-   */
   public async criar(dados: CriarAgendamentoDTO): Promise<Agendamento> {
-    // Validação futura: aqui poderíamos adicionar lógicas para verificar
-    // se o horário está disponível antes de criar o agendamento.
+    const servico = await prisma.servico.findUnique({
+      where: { id: dados.servicoId },
+    });
 
-    const agendamento = await prisma.agendamento.create({
+    if (!servico) {
+      throw new Error('Serviço não encontrado.');
+    }
+
+    const dataInicio = new Date(dados.data);
+    const dataFim = new Date(dataInicio.getTime() + servico.duracao * 60000);
+
+    const agendamentosConflitantes = await prisma.agendamento.findMany({
+      where: {
+        AND: [
+          {
+            data: {
+              gte: new Date(dataInicio.setHours(0, 0, 0, 0)),
+              lt: new Date(dataInicio.setHours(23, 59, 59, 999)),
+            },
+          },
+        ],
+      },
+      include: {
+        servico: true,
+      },
+    });
+    
+    const conflito = agendamentosConflitantes.find(ag => {
+        const agInicio = ag.data;
+        const agFim = new Date(agInicio.getTime() + ag.servico.duracao * 60000);
+        return dataInicio < agFim && dataFim > agInicio;
+    });
+
+    if (conflito) {
+      throw new Error('O horário solicitado já está ocupado.');
+    }
+
+    const novoAgendamento = await prisma.agendamento.create({
       data: {
-        data: new Date(dados.data), // Converte a string de data para o formato Date do JS
-        status: 'PENDENTE', // Define um status inicial
-        
-        // Conecta o agendamento ao cliente e ao serviço existentes
+        data: dataInicio,
+        status: 'PENDENTE',
         cliente: {
           connect: { id: dados.clienteId },
         },
@@ -36,33 +61,75 @@ export class AgendamentoService {
         },
       },
       include: {
-        servico: true, // Inclui os detalhes do serviço na resposta
-      }
+        servico: true,
+      },
     });
 
-    console.log('Novo agendamento criado:', agendamento);
-    return agendamento;
+    console.log('Novo agendamento criado:', novoAgendamento);
+    return novoAgendamento;
   }
 
-  /**
-   * Lista todos os agendamentos de um cliente específico.
-   * @param clienteId - O ID do cliente (obtido do token JWT).
-   * @returns Uma lista dos agendamentos do cliente.
-   */
   public async listarPorCliente(clienteId: string): Promise<Agendamento[]> {
     const agendamentos = await prisma.agendamento.findMany({
       where: {
         clienteId: clienteId,
       },
       include: {
-        // Inclui os detalhes do serviço em cada agendamento para mostrar ao cliente
         servico: true,
       },
       orderBy: {
-        data: 'asc', // Ordena os agendamentos do mais próximo para o mais distante
+        data: 'asc',
       },
     });
-
     return agendamentos;
+  }
+
+  public async cancelar(agendamentoId: string, clienteId: string): Promise<Agendamento> {
+    const agendamento = await prisma.agendamento.findUnique({
+      where: { id: agendamentoId },
+    });
+
+    if (!agendamento) {
+      throw new Error('Agendamento não encontrado.');
+    }
+
+    if (agendamento.clienteId !== clienteId) {
+      throw new Error('Não autorizado a cancelar este agendamento.');
+    }
+
+    const agendamentoCancelado = await prisma.agendamento.update({
+      where: {
+        id: agendamentoId,
+      },
+      data: {
+        status: 'CANCELADO',
+      },
+    });
+    return agendamentoCancelado;
+  }
+
+  /**
+   * ✅ NOVO MÉTODO (ADMIN): Lista todos os agendamentos do sistema.
+   */
+  public async listarTodos(): Promise<Agendamento[]> {
+    return prisma.agendamento.findMany({
+      include: {
+        cliente: true, // Inclui os dados do cliente
+        servico: true, // Inclui os dados do serviço
+      },
+      orderBy: {
+        data: 'desc', // Mostra os mais recentes primeiro
+      },
+    });
+  }
+
+  /**
+   * ✅ NOVO MÉTODO (ADMIN): Atualiza o status de qualquer agendamento.
+   */
+  public async atualizarStatus(agendamentoId: string, status: string): Promise<Agendamento> {
+    return prisma.agendamento.update({
+      where: { id: agendamentoId },
+      data: { status },
+    });
   }
 }

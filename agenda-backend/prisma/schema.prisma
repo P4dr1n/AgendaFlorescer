@@ -9,48 +9,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ✅ 1. Define um Enum para as Funções (Roles)
+// Isto garante que o campo 'role' só pode ter um destes dois valores.
+enum Role {
+  CLIENTE
+  ADMIN
+}
+
 model User {
   id        String   @id @default(uuid())
   usuario   String   @unique
   email     String   @unique
   senhaHash String
   telefone  String?
+  // ✅ 2. Adiciona o campo 'role' ao modelo User
+  // Define 'CLIENTE' como o valor padrão para todos os novos utilizadores.
+  role      Role     @default(CLIENTE)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // ✅ Relação: Um utilizador pode ter vários agendamentos
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   agendamentos Agendamento[]
 }
 
-// ✅ Novo Modelo: Servico
-// Define os serviços oferecidos pela estética.
 model Servico {
-  id        String   @id @default(uuid())
-  nome      String
-  descricao String?
-  preco     Float // Usamos Float para valores monetários
-  duracao   Int // Duração em minutos
-
-  // ✅ Relação: Um serviço pode estar em vários agendamentos
+  id           String        @id @default(uuid())
+  nome         String
+  descricao    String?
+  preco        Float
+  duracao      Int
   agendamentos Agendamento[]
 }
 
-// ✅ Novo Modelo: Agendamento
-// O coração da nossa aplicação.
 model Agendamento {
   id        String   @id @default(uuid())
-  data      DateTime // A data e hora do agendamento
-  status    String   @default("PENDENTE") // Ex: PENDENTE, CONFIRMADO, CANCELADO
-
+  data      DateTime
+  status    String   @default("PENDENTE")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // ✅ Relação com Utilizador (Cliente)
   clienteId String
-  cliente   User   @relation(fields: [clienteId], references: [id])
-
-  // ✅ Relação com Serviço
+  cliente   User     @relation(fields: [clienteId], references: [id])
   servicoId String
-  servico   Servico @relation(fields: [servicoId], references: [id])
+  servico   Servico  @relation(fields: [servicoId], references: [id])
 }

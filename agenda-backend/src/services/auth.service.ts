@@ -1,14 +1,11 @@
 // src/services/auth.service.ts
 
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, User, Role } from '@prisma/client'; // Importa o tipo Role
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const prisma = new PrismaClient();
 
-// ✅ CORREÇÃO AQUI:
-// Este tipo agora representa os dados que REALMENTE vêm do controlador.
-// Não inclui 'senhaHash', pois é responsabilidade deste serviço criá-la.
 interface RegisterData {
   usuario: string;
   email: string;
@@ -18,12 +15,8 @@ interface RegisterData {
 
 export class AuthService {
   public async login(usuario: string, senha: string): Promise<string> {
-    console.log(`Validando credenciais para: ${usuario}`);
-
     const user = await prisma.user.findUnique({
-      where: {
-        usuario: usuario,
-      },
+      where: { usuario: usuario },
     });
 
     if (!user || !(await bcrypt.compare(senha, user.senhaHash))) {
@@ -35,11 +28,14 @@ export class AuthService {
       throw new Error('O segredo do JWT não está configurado no servidor.');
     }
 
-    const token = jwt.sign(
-      { id: user.id, usuario: user.usuario },
-      jwtSecret,
-      { expiresIn: '8h' }
-    );
+    // ✅ Adiciona a 'role' do utilizador ao payload do token
+    const payload = {
+      id: user.id,
+      usuario: user.usuario,
+      role: user.role, // A função do utilizador é incluída aqui
+    };
+
+    const token = jwt.sign(payload, jwtSecret, { expiresIn: '8h' });
 
     return token;
   }
@@ -53,6 +49,7 @@ export class AuthService {
         email: data.email,
         senhaHash: senhaHash,
         telefone: data.telefone,
+        // O campo 'role' não é necessário aqui, pois o Prisma usará o valor padrão 'CLIENTE'
       },
     });
 

@@ -3,17 +3,18 @@
 import { Router } from 'express';
 import { AgendamentoController } from '../controllers/agendamento.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import { adminMiddleware } from '../middlewares/admin.middleware';
 
 const agendamentoRoutes = Router();
 const agendamentoController = new AgendamentoController();
 
-// Aplica o middleware de autenticação a TODAS as rotas deste arquivo
-agendamentoRoutes.use(authMiddleware);
+// --- ROTAS DE CLIENTE (requerem apenas login) ---
+agendamentoRoutes.post('/', authMiddleware, agendamentoController.criarAgendamento);
+agendamentoRoutes.get('/', authMiddleware, agendamentoController.listarAgendamentos);
+agendamentoRoutes.patch('/:id/cancelar', authMiddleware, agendamentoController.cancelarAgendamento);
 
-// Rota para criar um novo agendamento
-agendamentoRoutes.post('/', agendamentoController.criarAgendamento);
-
-// Rota para listar os agendamentos do utilizador logado
-agendamentoRoutes.get('/', agendamentoController.listarAgendamentos);
+// --- ROTAS DE ADMIN (requerem login + permissão de admin) ---
+agendamentoRoutes.get('/todos', authMiddleware, adminMiddleware, agendamentoController.listarTodosAgendamentos);
+agendamentoRoutes.patch('/:id/status', authMiddleware, adminMiddleware, agendamentoController.atualizarStatusAgendamento);
 
 export default agendamentoRoutes;
