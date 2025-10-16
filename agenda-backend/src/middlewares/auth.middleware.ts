@@ -30,9 +30,9 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     const data = jwt.verify(token, jwtSecret);
     const { id, role } = data as TokenPayload;
 
-    // Adiciona o ID e a ROLE à requisição para uso futuro
+    
     (req as any).userId = id;
-    (req as any).userRole = role; // ✅ Adiciona a role aqui
+    (req as any).userRole = role; 
 
     return next();
   } catch {

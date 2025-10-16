@@ -6,7 +6,7 @@ export class AuthController {
   private authService = new AuthService();
 
   public login = async (req: Request, res: Response): Promise<Response> => {
-    // ✅ Validação manual removida
+    
     const { usuario, senha } = req.body;
     const token = await this.authService.login(usuario, senha);
     return res.status(200).json({ token });

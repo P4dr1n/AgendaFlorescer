@@ -18,7 +18,7 @@ export class AgendamentoService {
     });
 
     if (!servico) {
-      throw new NotFoundError('Serviço não encontrado.'); // ✅ Usa o erro 404
+      throw new NotFoundError('Serviço não encontrado.'); // Usa o erro 404
     }
 
     const dataInicio = new Date(dados.data);
@@ -35,7 +35,7 @@ export class AgendamentoService {
     });
 
     if (conflito) {
-      throw new ApiError('O horário solicitado já está ocupado.', 409); // ✅ Usa o erro 409 (Conflict)
+      throw new ApiError('O horário solicitado já está ocupado.', 409); // Usa o erro 409 (Conflict)
     }
 
     const novoAgendamento = await prisma.agendamento.create({
@@ -64,11 +64,11 @@ export class AgendamentoService {
     });
 
     if (!agendamento) {
-      throw new NotFoundError('Agendamento não encontrado.'); // ✅ Usa o erro 404
+      throw new NotFoundError('Agendamento não encontrado.'); // Usa o erro 404
     }
 
     if (agendamento.clienteId !== clienteId) {
-      throw new ForbiddenError('Não autorizado a cancelar este agendamento.'); // ✅ Usa o erro 403
+      throw new ForbiddenError('Não autorizado a cancelar este agendamento.'); // Usa o erro 403
     }
 
     return prisma.agendamento.update({

@@ -1,7 +1,7 @@
 // src/server.ts
 
 import express from 'express';
-import cors from 'cors'; // A importação do 'express-async-errors' foi removida
+import cors from 'cors'; 
 
 import authRoutes from './routes/auth.routes';
 import agendamentoRoutes from './routes/agendamento.routes';

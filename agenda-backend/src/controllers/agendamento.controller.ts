@@ -6,14 +6,14 @@ export class AgendamentoController {
   private agendamentoService = new AgendamentoService();
 
   public criarAgendamento = async (req: Request, res: Response): Promise<Response> => {
-    // ✅ Validação manual removida
+    
     const { servicoId, data } = req.body;
     const clienteId = (req as any).userId;
     const novoAgendamento = await this.agendamentoService.criar({ clienteId, servicoId, data });
     return res.status(201).json(novoAgendamento);
   };
 
-  // ... resto dos métodos sem alteração
+  
   public listarAgendamentos = async (req: Request, res: Response): Promise<Response> => {
     const clienteId = (req as any).userId;
     const agendamentos = await this.agendamentoService.listarPorCliente(clienteId);

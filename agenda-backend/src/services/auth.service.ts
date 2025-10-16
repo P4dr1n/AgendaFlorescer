@@ -3,7 +3,7 @@
 import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UnauthorizedError } from '../errors/ApiError'; // Importa o erro específico
+import { UnauthorizedError } from '../errors/ApiError'; 
 
 const prisma = new PrismaClient();
 

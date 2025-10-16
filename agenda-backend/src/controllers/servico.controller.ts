@@ -6,7 +6,7 @@ export class ServicoController {
   private servicoService = new ServicoService();
 
   public criar = async (req: Request, res: Response): Promise<Response> => {
-    // ✅ Validação manual removida
+    
     const { nome, descricao, preco, duracao } = req.body;
     const novoServico = await this.servicoService.criar({ nome, descricao, preco, duracao });
     return res.status(201).json(novoServico);

@@ -12,7 +12,7 @@ export const criarServicoSchema = z.object({
       .string()
       .optional(),
 
-    // ✅ CORREÇÃO: A verificação de obrigatoriedade é implícita
+    
     preco: z
       .number()
       .positive({ message: 'O preço deve ser um valor positivo.' }),

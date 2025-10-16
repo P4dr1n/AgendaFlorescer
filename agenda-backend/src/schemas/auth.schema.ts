@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export const registerSchema = z.object({
   body: z.object({
-    // ✅ CORREÇÃO: Usando .min(1) para garantir que não está vazio
+    
     usuario: z
       .string()
       .min(3, { message: 'O nome de usuário deve ter no mínimo 3 caracteres.' }),

@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
-import { registerSchema, loginSchema } from '../schemas/auth.schema'; // Importa ambos os schemas
+import { registerSchema, loginSchema } from '../schemas/auth.schema'; 
 
 const authRoutes = Router();
 const authController = new AuthController();
