@@ -4,17 +4,20 @@ import { Router } from 'express';
 import { AgendamentoController } from '../controllers/agendamento.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { adminMiddleware } from '../middlewares/admin.middleware';
+import { validate } from '../middlewares/validate.middleware';
+import { criarAgendamentoSchema } from '../schemas/agendamento.schema';
 
 const agendamentoRoutes = Router();
 const agendamentoController = new AgendamentoController();
 
-// --- ROTAS DE CLIENTE (requerem apenas login) ---
-agendamentoRoutes.post('/', authMiddleware, agendamentoController.criarAgendamento);
-agendamentoRoutes.get('/', authMiddleware, agendamentoController.listarAgendamentos);
-agendamentoRoutes.patch('/:id/cancelar', authMiddleware, agendamentoController.cancelarAgendamento);
+agendamentoRoutes.use(authMiddleware);
 
-// --- ROTAS DE ADMIN (requerem login + permissão de admin) ---
-agendamentoRoutes.get('/todos', authMiddleware, adminMiddleware, agendamentoController.listarTodosAgendamentos);
-agendamentoRoutes.patch('/:id/status', authMiddleware, adminMiddleware, agendamentoController.atualizarStatusAgendamento);
+// Aplica a validação à rota de criação de agendamento
+agendamentoRoutes.post('/', validate(criarAgendamentoSchema), agendamentoController.criarAgendamento);
+agendamentoRoutes.get('/', agendamentoController.listarAgendamentos);
+agendamentoRoutes.patch('/:id/cancelar', agendamentoController.cancelarAgendamento);
+
+agendamentoRoutes.get('/todos', adminMiddleware, agendamentoController.listarTodosAgendamentos);
+agendamentoRoutes.patch('/:id/status', adminMiddleware, agendamentoController.atualizarStatusAgendamento);
 
 export default agendamentoRoutes;

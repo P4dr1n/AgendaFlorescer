@@ -1,7 +1,7 @@
 // src/server.ts
 
 import express from 'express';
-// ✅ A linha 'import 'express-async-errors';' FOI REMOVIDA.
+import cors from 'cors'; // A importação do 'express-async-errors' foi removida
 
 import authRoutes from './routes/auth.routes';
 import agendamentoRoutes from './routes/agendamento.routes';
@@ -11,6 +11,8 @@ import { errorMiddleware } from './middlewares/error.middleware';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middlewares
+app.use(cors());
 app.use(express.json());
 
 // Roteadores
@@ -18,8 +20,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/agendamentos', agendamentoRoutes);
 app.use('/api/servicos', servicoRoutes);
 
-// O middleware de erro continua a ser o último 'app.use'.
-// O Express 5 irá agora redirecionar os erros async para aqui automaticamente.
+// Middleware de Erro (deve ser o último)
 app.use(errorMiddleware);
 
 app.listen(PORT, () => {

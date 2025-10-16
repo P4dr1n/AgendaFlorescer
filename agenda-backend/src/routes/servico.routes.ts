@@ -3,18 +3,17 @@
 import { Router } from 'express';
 import { ServicoController } from '../controllers/servico.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
-import { adminMiddleware } from '../middlewares/admin.middleware'; // 1. Importa o novo middleware
+import { adminMiddleware } from '../middlewares/admin.middleware';
+import { validate } from '../middlewares/validate.middleware';
+import { criarServicoSchema } from '../schemas/servico.schema';
 
 const servicoRoutes = Router();
 const servicoController = new ServicoController();
 
-// --- ROTA PÚBLICA ---
 servicoRoutes.get('/', servicoController.listar);
 
-// --- ROTAS PROTEGIDAS PARA ADMINS ---
-// 2. Adicionamos o 'adminMiddleware' depois do 'authMiddleware'.
-// A requisição primeiro verifica se o utilizador está logado, e depois se é um admin.
-servicoRoutes.post('/', authMiddleware, adminMiddleware, servicoController.criar);
+// Aplica a validação à rota de criação de serviço
+servicoRoutes.post('/', authMiddleware, adminMiddleware, validate(criarServicoSchema), servicoController.criar);
 servicoRoutes.put('/:id', authMiddleware, adminMiddleware, servicoController.atualizar);
 servicoRoutes.delete('/:id', authMiddleware, adminMiddleware, servicoController.deletar);
 

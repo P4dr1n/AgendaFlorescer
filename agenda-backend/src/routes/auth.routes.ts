@@ -2,19 +2,17 @@
 
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
-import { authMiddleware } from '../middlewares/auth.middleware'; // Importa o middleware
+import { authMiddleware } from '../middlewares/auth.middleware';
+import { validate } from '../middlewares/validate.middleware';
+import { registerSchema, loginSchema } from '../schemas/auth.schema'; // Importa ambos os schemas
 
 const authRoutes = Router();
 const authController = new AuthController();
 
-// --- ROTAS PÚBLICAS (não precisam de token) ---
-authRoutes.post('/login', authController.login);
-authRoutes.post('/register', authController.register);
+// Aplica a validação à rota de login
+authRoutes.post('/login', validate(loginSchema), authController.login);
+authRoutes.post('/register', validate(registerSchema), authController.register);
 
-// --- ROTAS PROTEGIDAS (precisam de token) ---
-// Qualquer requisição para /me passará primeiro pelo authMiddleware.
-// Se o token for válido, a requisição continua para authController.getProfile.
-// Se não, o middleware bloqueará a requisição com um erro 401.
 authRoutes.get('/me', authMiddleware, authController.getProfile);
 
 export default authRoutes;

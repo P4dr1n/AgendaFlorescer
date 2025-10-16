@@ -1,8 +1,9 @@
 // src/services/auth.service.ts
 
-import { PrismaClient, User, Role } from '@prisma/client'; // Importa o tipo Role
+import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from '../errors/ApiError'; // Importa o erro específico
 
 const prisma = new PrismaClient();
 
@@ -15,12 +16,11 @@ interface RegisterData {
 
 export class AuthService {
   public async login(usuario: string, senha: string): Promise<string> {
-    const user = await prisma.user.findUnique({
-      where: { usuario: usuario },
-    });
+    const user = await prisma.user.findUnique({ where: { usuario } });
 
     if (!user || !(await bcrypt.compare(senha, user.senhaHash))) {
-      throw new Error('Usuário ou senha inválidos.');
+      // ✅ Usa o erro com o status code 401
+      throw new UnauthorizedError('Usuário ou senha inválidos.');
     }
 
     const jwtSecret = process.env.JWT_SECRET;
@@ -28,13 +28,7 @@ export class AuthService {
       throw new Error('O segredo do JWT não está configurado no servidor.');
     }
 
-    // ✅ Adiciona a 'role' do utilizador ao payload do token
-    const payload = {
-      id: user.id,
-      usuario: user.usuario,
-      role: user.role, // A função do utilizador é incluída aqui
-    };
-
+    const payload = { id: user.id, usuario: user.usuario, role: user.role };
     const token = jwt.sign(payload, jwtSecret, { expiresIn: '8h' });
 
     return token;
@@ -49,13 +43,10 @@ export class AuthService {
         email: data.email,
         senhaHash: senhaHash,
         telefone: data.telefone,
-        // O campo 'role' não é necessário aqui, pois o Prisma usará o valor padrão 'CLIENTE'
       },
     });
 
     const { senhaHash: _, ...userSemSenha } = novoUsuario;
-
-    console.log('Novo usuário salvo no banco de dados:', userSemSenha);
     return userSemSenha;
   }
 }
