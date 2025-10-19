@@ -20,7 +20,7 @@ export class AuthController {
 
   public getProfile = async (req: Request, res: Response): Promise<Response> => {
     const userId = (req as any).userId;
-    const userName = (req as any).userName;
-    return res.json({ id: userId, usuario: userName, message: 'Token válido!' });
+    const profile = await this.authService.getProfile(userId);
+    return res.json(profile);
   };
 }

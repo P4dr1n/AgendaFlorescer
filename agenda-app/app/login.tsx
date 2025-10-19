@@ -4,14 +4,34 @@ import { useRouter } from "expo-router"
 import { useState } from "react"
 import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { loginRequest } from "../lib/api"
+import { saveAuthToken } from "../lib/auth-storage"
 
 export default function LoginScreen() {
   const [usuario, setUsuario] = useState("")
   const [senha, setSenha] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const router = useRouter()
 
-  const handleLogin = () => {
-    router.replace("/(telasCliente)/home")
+  const handleLogin = async () => {
+    if (!usuario.trim() || !senha) {
+      setFeedback({ type: "error", message: "Informe usuário e senha para continuar." })
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { token } = await loginRequest(usuario.trim(), senha)
+      await saveAuthToken(token)
+      setFeedback({ type: "success", message: "Login realizado com sucesso." })
+      router.replace("/(telasCliente)/home")
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível entrar agora."
+      setFeedback({ type: "error", message })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleNavigateToRegister = () => {
@@ -55,8 +75,13 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleLogin} activeOpacity={0.9}>
-              <Text style={styles.primaryButtonText}>Entrar</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.primaryButton, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              activeOpacity={0.9}
+              disabled={loading}
+            >
+              <Text style={styles.primaryButtonText}>{loading ? "Entrando..." : "Entrar"}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.secondaryButton]}
@@ -65,6 +90,11 @@ export default function LoginScreen() {
             >
               <Text style={styles.secondaryButtonText}>Criar conta</Text>
             </TouchableOpacity>
+            {feedback ? (
+              <Text style={[styles.feedbackText, feedback.type === "error" ? styles.feedbackError : styles.feedbackSuccess]}>
+                {feedback.message}
+              </Text>
+            ) : null}
           </View>
         </View>
     </SafeAreaView>
@@ -155,5 +185,19 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "500",
     letterSpacing: 0.3,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  feedbackText: {
+    marginTop: 8,
+    textAlign: "center",
+    fontSize: 14,
+  },
+  feedbackError: {
+    color: "#ffdddd",
+  },
+  feedbackSuccess: {
+    color: "#d0ffd6",
   },
 })

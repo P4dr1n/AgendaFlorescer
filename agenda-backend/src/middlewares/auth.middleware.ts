@@ -28,11 +28,11 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     }
 
     const data = jwt.verify(token, jwtSecret);
-    const { id, role } = data as TokenPayload;
+    const { id, role, usuario } = data as TokenPayload;
 
-    
     (req as any).userId = id;
     (req as any).userRole = role; 
+    (req as any).userName = usuario;
 
     return next();
   } catch {

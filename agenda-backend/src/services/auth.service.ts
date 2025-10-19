@@ -3,7 +3,7 @@
 import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UnauthorizedError } from '../errors/ApiError'; 
+import { NotFoundError, UnauthorizedError } from '../errors/ApiError'; 
 
 const prisma = new PrismaClient();
 
@@ -47,6 +47,17 @@ export class AuthService {
     });
 
     const { senhaHash: _, ...userSemSenha } = novoUsuario;
+    return userSemSenha;
+  }
+
+  public async getProfile(userId: string): Promise<Omit<User, 'senhaHash'>> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundError('Usuário não encontrado.');
+    }
+
+    const { senhaHash: _, ...userSemSenha } = user;
     return userSemSenha;
   }
 }

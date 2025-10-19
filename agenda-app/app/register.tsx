@@ -4,6 +4,7 @@ import { useRouter } from "expo-router"
 import { useState } from "react"
 import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { registerRequest } from "../lib/api"
 
 export default function RegisterScreen() {
   const [usuario, setUsuario] = useState("")
@@ -11,14 +12,38 @@ export default function RegisterScreen() {
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [telefone, setTelefone] = useState("")
   const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const router = useRouter()
 
   const handleGoBack = () => {
     router.back()
   }
 
-  const handleRegister = () => {
-    console.log("Registrando usuário...")
+  const handleRegister = async () => {
+    if (!usuario.trim() || !email.trim() || !senha || !confirmarSenha) {
+      setFeedback({ type: "error", message: "Preencha usuário, email e senha para continuar." })
+      return
+    }
+
+    if (senha !== confirmarSenha) {
+      setFeedback({ type: "error", message: "As senhas informadas são diferentes." })
+      return
+    }
+
+    setLoading(true)
+    try {
+      await registerRequest({ usuario: usuario.trim(), email: email.trim(), senha, telefone: telefone.trim() || undefined })
+      setFeedback({ type: "success", message: "Cadastro realizado com sucesso!" })
+      setTimeout(() => {
+        router.replace("/login")
+      }, 1200)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível realizar o cadastro agora."
+      setFeedback({ type: "error", message })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -118,13 +143,22 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.primaryButton} onPress={handleRegister}>
-              <Text style={styles.primaryButtonText}>Registrar</Text>
+            <TouchableOpacity
+              style={[styles.primaryButton, loading && styles.buttonDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              <Text style={styles.primaryButtonText}>{loading ? "Enviando..." : "Registrar"}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.secondaryButton} onPress={handleGoBack}>
               <Text style={styles.secondaryButtonText}>Voltar</Text>
             </TouchableOpacity>
+            {feedback ? (
+              <Text style={[styles.feedbackText, feedback.type === "error" ? styles.feedbackError : styles.feedbackSuccess]}>
+                {feedback.message}
+              </Text>
+            ) : null}
           </View>
         </ScrollView>
     </SafeAreaView>
@@ -214,5 +248,19 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
     letterSpacing: 0.3,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  feedbackText: {
+    marginTop: 12,
+    textAlign: "center",
+    fontSize: 14,
+  },
+  feedbackError: {
+    color: "#ffdddd",
+  },
+  feedbackSuccess: {
+    color: "#d0ffd6",
   },
 })

@@ -1,10 +1,12 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { getProfileRequest } from "@/lib/api"
+import { getAuthToken } from "@/lib/auth-storage"
 
 
 const SCREEN_WIDTH = Dimensions.get("window").width
@@ -14,11 +16,37 @@ const ITEM_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GRID_GAP) / 2)
 
 export default function HomeClienteScreen() {
   const router = useRouter()
+  const [userName, setUserName] = useState<string>("Cliente")
 
   const proximo = useMemo(
     () => ({ servico: "Limpeza de Pele Avançada", profissional: "Joana", data: "Amanhã, 14/10", hora: "15:00" }),
     [],
   )
+
+  useEffect(() => {
+    let active = true
+
+    const loadProfile = async () => {
+      try {
+        const token = await getAuthToken()
+        if (!token) {
+          return
+        }
+        const profile = await getProfileRequest(token)
+        if (active && profile?.usuario) {
+          setUserName(profile.usuario)
+        }
+      } catch (error) {
+        console.warn("Falha ao carregar perfil do usuário", error)
+      }
+    }
+
+    loadProfile()
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -27,7 +55,7 @@ export default function HomeClienteScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.hello}>Olá,</Text>
-            <Text style={styles.userName}>Cliente</Text>
+            <Text style={styles.userName}>{userName || "Cliente"}</Text>
           </View>
           <TouchableOpacity style={styles.iconButton} onPress={() => {}} activeOpacity={0.8}>
             <MaterialCommunityIcons name="bell-outline" size={24} color="#FF4081" />
