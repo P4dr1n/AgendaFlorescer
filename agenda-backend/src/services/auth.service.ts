@@ -3,20 +3,20 @@
 import { PrismaClient, User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { NotFoundError, UnauthorizedError } from '../errors/ApiError'; 
+import { NotFoundError, UnauthorizedError } from '../errors/ApiError';
 
 const prisma = new PrismaClient();
 
 interface RegisterData {
-  usuario: string;
+  nomeCompleto: string;
   email: string;
   senha: string;
   telefone?: string | null;
 }
 
 export class AuthService {
-  public async login(usuario: string, senha: string): Promise<string> {
-    const user = await prisma.user.findUnique({ where: { usuario } });
+  public async login(email: string, senha: string): Promise<string> {
+    const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !(await bcrypt.compare(senha, user.senhaHash))) {
       // ✅ Usa o erro com o status code 401
@@ -28,7 +28,7 @@ export class AuthService {
       throw new Error('O segredo do JWT não está configurado no servidor.');
     }
 
-    const payload = { id: user.id, usuario: user.usuario, role: user.role };
+    const payload = { id: user.id, nomeCompleto: user.nomeCompleto, role: user.role };
     const token = jwt.sign(payload, jwtSecret, { expiresIn: '8h' });
 
     return token;
@@ -39,7 +39,7 @@ export class AuthService {
 
     const novoUsuario = await prisma.user.create({
       data: {
-        usuario: data.usuario,
+        nomeCompleto: data.nomeCompleto,
         email: data.email,
         senhaHash: senhaHash,
         telefone: data.telefone,

@@ -2,20 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { getProfileRequest } from "@/lib/api"
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { getAuthToken } from "@/lib/auth-storage"
-
-
-const SCREEN_WIDTH = Dimensions.get("window").width
-const H_PADDING = 24 
-const GRID_GAP = 12
-const ITEM_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GRID_GAP) / 2)
+import { getProfileRequest } from "@/lib/api"
 
 export default function HomeClienteScreen() {
-  const router = useRouter()
   const [userName, setUserName] = useState<string>("Cliente")
 
   const proximo = useMemo(
@@ -33,8 +25,9 @@ export default function HomeClienteScreen() {
           return
         }
         const profile = await getProfileRequest(token)
-        if (active && profile?.usuario) {
-          setUserName(profile.usuario)
+        if (active && profile?.nomeCompleto) {
+          const firstName = profile.nomeCompleto.trim().split(/\s+/)[0]
+          setUserName(firstName || "Cliente")
         }
       } catch (error) {
         console.warn("Falha ao carregar perfil do usuário", error)
@@ -57,7 +50,7 @@ export default function HomeClienteScreen() {
             <Text style={styles.hello}>Olá,</Text>
             <Text style={styles.userName}>{userName || "Cliente"}</Text>
           </View>
-          <TouchableOpacity style={styles.iconButton} onPress={() => {}} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => { }} activeOpacity={0.8}>
             <MaterialCommunityIcons name="bell-outline" size={24} color="#FF4081" />
           </TouchableOpacity>
         </View>
@@ -77,7 +70,7 @@ export default function HomeClienteScreen() {
 
           <View style={styles.cardDetails}>
             <View style={styles.detailRow}>
-              <MaterialCommunityIcons name="spa" size={18} color="#951950" />
+              <MaterialCommunityIcons name="spa" size={18} color="#8c3155" />
               <Text style={styles.detailLabel}>Serviço</Text>
             </View>
             <Text style={styles.detailValue}>{proximo.servico}</Text>
@@ -85,7 +78,7 @@ export default function HomeClienteScreen() {
 
           <View style={styles.cardDetails}>
             <View style={styles.detailRow}>
-              <MaterialCommunityIcons name="account" size={18} color="#951950" />
+              <MaterialCommunityIcons name="account" size={18} color="#8c3155" />
               <Text style={styles.detailLabel}>Profissional</Text>
             </View>
             <Text style={styles.detailValue}>{proximo.profissional}</Text>
@@ -93,7 +86,7 @@ export default function HomeClienteScreen() {
 
           <View style={styles.cardDetails}>
             <View style={styles.detailRow}>
-              <MaterialCommunityIcons name="clock-outline" size={18} color="#951950" />
+              <MaterialCommunityIcons name="clock-outline" size={18} color="#8c3155" />
               <Text style={styles.detailLabel}>Data e Hora</Text>
             </View>
             <Text style={styles.detailValue}>
@@ -102,32 +95,32 @@ export default function HomeClienteScreen() {
           </View>
 
           <View style={styles.cardActions}>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={() => {}}>
+            <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={() => { }}>
               <MaterialCommunityIcons name="calendar-edit" size={16} color="#FF4081" />
               <Text style={styles.actionSecondaryText}>Remarcar</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionPrimary]} onPress={() => {}}>
+            <TouchableOpacity style={[styles.actionBtn, styles.actionPrimary]} onPress={() => { }}>
               <MaterialCommunityIcons name="map-marker" size={16} color="#FFFFFF" />
               <Text style={styles.actionPrimaryText}>Como chegar</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => {}}>
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => { }}>
             <Text style={styles.cancelText}>Cancelar agendamento</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.primaryCta} onPress={() => {}} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.primaryCta} onPress={() => { }} activeOpacity={0.9}>
           <MaterialCommunityIcons name="plus-circle" size={24} color="#FFFFFF" />
           <Text style={styles.primaryCtaText}>Agendar Novo Horário</Text>
         </TouchableOpacity>
 
         <Text style={styles.sectionTitle}>Acesso Rápido</Text>
         <View style={styles.quickGrid}>
-          <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={() => {}} />
-          <QuickItem icon="spa" label="Nossos Serviços" onPress={() => {}} />
-          <QuickItem icon="tag" label="Promoções" onPress={() => {}} />
-          <QuickItem icon="account-circle" label="Meu Perfil" onPress={() => {}} />
+          <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={() => { }} />
+          <QuickItem icon="spa" label="Nossos Serviços" onPress={() => { }} />
+          <QuickItem icon="tag" label="Promoções" onPress={() => { }} />
+          <QuickItem icon="account-circle" label="Meu Perfil" onPress={() => { }} />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -148,7 +141,7 @@ function QuickItem({ icon, label, onPress }: { icon: any; label: string; onPress
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#FFD3E0",
+    backgroundColor: "#FCE4EC",
   },
   content: {
     paddingHorizontal: 24,
@@ -163,13 +156,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   hello: {
-    color: "#951950", 
+    color: "#8c3155",
     fontSize: 16,
     fontWeight: "500",
     letterSpacing: 0.3,
   },
   userName: {
-    color: "#951950", 
+    color: "#8c3155",
     fontSize: 32,
     fontWeight: "700",
     letterSpacing: -0.5,
@@ -181,19 +174,19 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF", 
-    shadowColor: "#FF4081", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#FF4081",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
   card: {
-    backgroundColor: "#FFFFFF", 
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 24,
     gap: 16,
-    shadowColor: "#951950", 
+    shadowColor: "#8c3155",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -208,7 +201,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#ffe4ff", 
+    backgroundColor: "#FCE4EC",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -217,19 +210,19 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   cardTitle: {
-    color: "#951950", 
+    color: "#8c3155",
     fontWeight: "700",
     fontSize: 20,
     letterSpacing: -0.3,
   },
   cardSubtitle: {
-    color: "#cba2ae", 
+    color: "#c9b2ba",
     fontSize: 14,
     fontWeight: "500",
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "#f5c9d6", 
+    backgroundColor: "#FCE4EC",
     marginVertical: 4,
   },
   cardDetails: {
@@ -241,7 +234,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailLabel: {
-    color: "#951950", 
+    color: "#8c3155",
     fontSize: 13,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -274,20 +267,20 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   actionSecondary: {
-    backgroundColor: "#ffe4ff",
+    backgroundColor: "#FCE4EC",
     borderWidth: 1.5,
-    borderColor: "#FF80AB",
+    borderColor: "#F48FB1",
   },
   actionSecondaryText: {
-    color: "#FF4081", 
+    color: "#FF4081",
     fontWeight: "700",
     fontSize: 14,
   },
   actionPrimary: {
-    backgroundColor: "#FF4081", 
+    backgroundColor: "#FF4081",
   },
   actionPrimaryText: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 14,
   },
@@ -296,13 +289,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   cancelText: {
-    color: "#cba2ae", 
+    color: "#c9b2ba",
     fontSize: 14,
     fontWeight: "600",
     textDecorationLine: "underline",
   },
   primaryCta: {
-    backgroundColor: "#FF4081", 
+    backgroundColor: "#FF4081",
     borderRadius: 20,
     paddingVertical: 18,
     paddingHorizontal: 24,
@@ -317,13 +310,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   primaryCtaText: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "800",
     letterSpacing: 0.3,
   },
   sectionTitle: {
-    color: "#951950", 
+    color: "#8c3155",
     fontSize: 20,
     fontWeight: "700",
     letterSpacing: -0.3,
@@ -333,17 +326,17 @@ const styles = StyleSheet.create({
   quickGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 14,
     justifyContent: "space-between",
   },
   quickItem: {
-    width: ITEM_WIDTH,
-    marginBottom: 14,
-    backgroundColor: "#FFFFFF", 
+    width: "48%",
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
     gap: 12,
     alignItems: "center",
-    shadowColor: "#951950", 
+    shadowColor: "#8c3155",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -355,10 +348,10 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffe4ff", 
+    backgroundColor: "#FCE4EC",
   },
   quickLabel: {
-    color: "#951950", 
+    color: "#8c3155",
     fontWeight: "700",
     fontSize: 14,
     textAlign: "center",

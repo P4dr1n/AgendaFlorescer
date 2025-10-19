@@ -8,24 +8,24 @@ import { loginRequest } from "../lib/api"
 import { saveAuthToken } from "../lib/auth-storage"
 
 export default function LoginScreen() {
-  const [usuario, setUsuario] = useState("")
+  const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const router = useRouter()
 
   const handleLogin = async () => {
-    if (!usuario.trim() || !senha) {
-      setFeedback({ type: "error", message: "Informe usuário e senha para continuar." })
+    if (!email.trim() || !senha) {
+      setFeedback({ type: "error", message: "Informe email e senha para continuar." })
       return
     }
 
     setLoading(true)
     try {
-      const { token } = await loginRequest(usuario.trim(), senha)
+      const { token } = await loginRequest(email.trim().toLowerCase(), senha)
       await saveAuthToken(token)
       setFeedback({ type: "success", message: "Login realizado com sucesso." })
-      router.replace("/(telasCliente)/home")
+      router.replace("/(telas_clientes)/home")
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível entrar agora."
       setFeedback({ type: "error", message })
@@ -39,8 +39,8 @@ export default function LoginScreen() {
   }
 
   return (
-      <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
-    <SafeAreaView style={styles.safeArea}>
+    <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
+      <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" />
 
         <View style={styles.content}>
@@ -52,13 +52,15 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>Entre na sua conta</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Usuário</Text>
+            <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
-              placeholder="Digite seu usuário"
+              placeholder="Digite seu email"
               placeholderTextColor="rgba(255, 255, 255, 0.5)"
-              value={usuario}
-              onChangeText={setUsuario}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
 
@@ -97,8 +99,8 @@ export default function LoginScreen() {
             ) : null}
           </View>
         </View>
-    </SafeAreaView>
-      </LinearGradient>
+      </SafeAreaView>
+    </LinearGradient>
   )
 }
 

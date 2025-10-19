@@ -94,9 +94,9 @@ A URL base para todas as requisições é http://localhost:3000.
 
 Autenticação (/api/auth)
 Método	Endpoint	Protegido	Descrição	Corpo (Body) da Requisição	Resposta de Sucesso (2xx)
-POST	/register	Não	Regista um novo utilizador (com role CLIENTE).	{ "usuario", "email", "senha", "telefone?" }	201 Created - { id, usuario, email }
-POST	/login	Não	Autentica um utilizador e retorna um token JWT.	{ "usuario", "senha" }	200 OK - { token }
-GET	/me	Sim	Retorna os dados do utilizador autenticado.	-	200 OK - { id, usuario, role }
+POST	/register	Não	Regista um novo utilizador (com role CLIENTE).	{ "nomeCompleto", "email", "senha", "telefone?" }	201 Created - { id, nomeCompleto, email }
+POST	/login	Não	Autentica um utilizador e retorna um token JWT.	{ "email", "senha" }	200 OK - { token }
+GET	/me	Sim	Retorna os dados do utilizador autenticado.	-	200 OK - { id, nomeCompleto, role }
 
 Exportar para as Planilhas
 Serviços (/api/servicos)

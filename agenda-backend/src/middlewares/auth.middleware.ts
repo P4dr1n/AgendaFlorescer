@@ -6,7 +6,7 @@ import { Role } from '@prisma/client';
 
 interface TokenPayload {
   id: string;
-  usuario: string;
+  nomeCompleto: string;
   role: Role; // O payload agora contém a 'role'
   iat: number;
   exp: number;
@@ -28,11 +28,11 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     }
 
     const data = jwt.verify(token, jwtSecret);
-    const { id, role, usuario } = data as TokenPayload;
+    const { id, role, nomeCompleto } = data as TokenPayload;
 
     (req as any).userId = id;
-    (req as any).userRole = role; 
-    (req as any).userName = usuario;
+    (req as any).userRole = role;
+    (req as any).userName = nomeCompleto;
 
     return next();
   } catch {

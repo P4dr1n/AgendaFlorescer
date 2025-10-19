@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import { registerRequest } from "../lib/api"
 
 export default function RegisterScreen() {
-  const [usuario, setUsuario] = useState("")
+  const [nomeCompleto, setNomeCompleto] = useState("")
   const [senha, setSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [telefone, setTelefone] = useState("")
@@ -21,8 +21,8 @@ export default function RegisterScreen() {
   }
 
   const handleRegister = async () => {
-    if (!usuario.trim() || !email.trim() || !senha || !confirmarSenha) {
-      setFeedback({ type: "error", message: "Preencha usuário, email e senha para continuar." })
+    if (!nomeCompleto.trim() || !email.trim() || !senha || !confirmarSenha) {
+      setFeedback({ type: "error", message: "Preencha nome completo, email e senha para continuar." })
       return
     }
 
@@ -33,7 +33,7 @@ export default function RegisterScreen() {
 
     setLoading(true)
     try {
-      await registerRequest({ usuario: usuario.trim(), email: email.trim(), senha, telefone: telefone.trim() || undefined })
+      await registerRequest({ nomeCompleto: nomeCompleto.trim(), email: email.trim().toLowerCase(), senha, telefone: telefone.trim() || undefined })
       setFeedback({ type: "success", message: "Cadastro realizado com sucesso!" })
       setTimeout(() => {
         router.replace("/login")
@@ -48,7 +48,7 @@ export default function RegisterScreen() {
 
   return (
     <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
-        <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="light-content" />
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
@@ -66,10 +66,11 @@ export default function RegisterScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Usuário"
+                placeholder="Nome completo"
                 placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                value={usuario}
-                onChangeText={setUsuario}
+                autoCapitalize="words"
+                value={nomeCompleto}
+                onChangeText={setNomeCompleto}
               />
             </View>
 
@@ -161,8 +162,8 @@ export default function RegisterScreen() {
             ) : null}
           </View>
         </ScrollView>
-    </SafeAreaView>
-      </LinearGradient>
+      </SafeAreaView>
+    </LinearGradient>
   )
 }
 

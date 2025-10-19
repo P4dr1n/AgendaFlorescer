@@ -38,22 +38,22 @@ async function request<TResponse>(path: string, init?: RequestInit): Promise<TRe
   return json;
 }
 
-export async function loginRequest(usuario: string, senha: string) {
+export async function loginRequest(email: string, senha: string) {
   return request<{ token: string }>('/api/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ usuario, senha }),
+    body: JSON.stringify({ email, senha }),
   });
 }
 
 export interface RegisterPayload {
-  usuario: string;
+  nomeCompleto: string;
   email: string;
   senha: string;
   telefone?: string;
 }
 
 export async function registerRequest(payload: RegisterPayload) {
-  return request<{ id: string; usuario: string; email: string }>('/api/auth/register', {
+  return request<{ id: string; nomeCompleto: string; email: string }>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -61,7 +61,7 @@ export async function registerRequest(payload: RegisterPayload) {
 
 export interface ProfileResponse {
   id: string;
-  usuario: string;
+  nomeCompleto: string;
   email: string;
   telefone?: string | null;
   role: string;

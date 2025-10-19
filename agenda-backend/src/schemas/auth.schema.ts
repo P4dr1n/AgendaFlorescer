@@ -4,10 +4,9 @@ import { z } from 'zod';
 
 export const registerSchema = z.object({
   body: z.object({
-    
-    usuario: z
+    nomeCompleto: z
       .string()
-      .min(3, { message: 'O nome de usuário deve ter no mínimo 3 caracteres.' }),
+      .min(3, { message: 'O nome completo deve ter no mínimo 3 caracteres.' }),
 
     email: z
       .string()
@@ -24,13 +23,13 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-    body: z.object({
-        usuario: z
-            .string()
-            .min(1, { message: 'O nome de usuário é obrigatório.' }),
+  body: z.object({
+    email: z
+      .string()
+      .email({ message: 'O email é obrigatório.' }),
 
-        senha: z
-            .string()
-            .min(1, { message: 'A senha é obrigatória.' }),
-    }),
+    senha: z
+      .string()
+      .min(1, { message: 'A senha é obrigatória.' }),
+  }),
 });
