@@ -77,3 +77,52 @@ export async function getProfileRequest(token: string) {
     },
   });
 }
+
+export interface ServicoResponse {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  preco: number;
+  duracao: number;
+}
+
+export function listServicosRequest() {
+  return request<ServicoResponse[]>('/api/servicos', {
+    method: 'GET',
+  });
+}
+
+export interface AgendamentoResponse {
+  id: string;
+  data: string;
+  status: string;
+  clienteId: string;
+  servicoId: string;
+  createdAt: string;
+  updatedAt: string;
+  servico: ServicoResponse;
+}
+
+export interface CreateAgendamentoPayload {
+  servicoId: string;
+  data: string;
+}
+
+export function listAgendamentosRequest(token: string) {
+  return request<AgendamentoResponse[]>('/api/agendamentos', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export function createAgendamentoRequest(token: string, payload: CreateAgendamentoPayload) {
+  return request<AgendamentoResponse>('/api/agendamentos', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+}

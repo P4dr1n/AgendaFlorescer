@@ -1,42 +1,58 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { LinearGradient } from "expo-linear-gradient"
-import { useRouter } from "expo-router"
-import { useState } from "react"
-import { StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { loginRequest } from "../lib/api"
-import { saveAuthToken } from "../lib/auth-storage"
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { loginRequest } from "../lib/api";
+import { saveAuthToken } from "../lib/auth-storage";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("")
-  const [senha, setSenha] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const router = useRouter();
 
   const handleLogin = async () => {
     if (!email.trim() || !senha) {
-      setFeedback({ type: "error", message: "Informe email e senha para continuar." })
-      return
+      setFeedback({
+        type: "error",
+        message: "Informe email e senha para continuar.",
+      });
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const { token } = await loginRequest(email.trim().toLowerCase(), senha)
-      await saveAuthToken(token)
-      setFeedback({ type: "success", message: "Login realizado com sucesso." })
-      router.replace("/(telas_clientes)/home")
+      const { token } = await loginRequest(email.trim().toLowerCase(), senha);
+      await saveAuthToken(token);
+      setFeedback({ type: "success", message: "Login realizado com sucesso." });
+      router.replace("/(telas_clientes)/home");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Não foi possível entrar agora."
-      setFeedback({ type: "error", message })
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível entrar agora.";
+      setFeedback({ type: "error", message });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleNavigateToRegister = () => {
-    router.push("/register")
-  }
+    router.push("/register");
+  };
 
   return (
     <LinearGradient colors={["#B23A6D", "#E85A8E"]} style={styles.container}>
@@ -45,7 +61,11 @@ export default function LoginScreen() {
 
         <View style={styles.content}>
           <View style={styles.iconContainer}>
-            <MaterialCommunityIcons name="calendar-clock" size={48} color="#FFF" />
+            <MaterialCommunityIcons
+              name="calendar-clock"
+              size={48}
+              color="#FFF"
+            />
           </View>
 
           <Text style={styles.title}>Agendamento</Text>
@@ -78,22 +98,32 @@ export default function LoginScreen() {
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, styles.primaryButton, loading && styles.buttonDisabled]}
+              style={[
+                styles.button,
+                styles.primaryButton,
+                loading && styles.buttonDisabled,
+              ]}
               onPress={handleLogin}
               activeOpacity={0.9}
-              disabled={loading}
-            >
-              <Text style={styles.primaryButtonText}>{loading ? "Entrando..." : "Entrar"}</Text>
+              disabled={loading}>
+              <Text style={styles.primaryButtonText}>
+                {loading ? "Entrando..." : "Entrar"}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.secondaryButton]}
               onPress={handleNavigateToRegister}
-              activeOpacity={0.9}
-            >
+              activeOpacity={0.9}>
               <Text style={styles.secondaryButtonText}>Criar conta</Text>
             </TouchableOpacity>
             {feedback ? (
-              <Text style={[styles.feedbackText, feedback.type === "error" ? styles.feedbackError : styles.feedbackSuccess]}>
+              <Text
+                style={[
+                  styles.feedbackText,
+                  feedback.type === "error"
+                    ? styles.feedbackError
+                    : styles.feedbackSuccess,
+                ]}>
                 {feedback.message}
               </Text>
             ) : null}
@@ -101,7 +131,7 @@ export default function LoginScreen() {
         </View>
       </SafeAreaView>
     </LinearGradient>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -202,4 +232,4 @@ const styles = StyleSheet.create({
   feedbackSuccess: {
     color: "#d0ffd6",
   },
-})
+});
