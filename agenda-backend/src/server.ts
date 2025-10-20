@@ -24,5 +24,5 @@ app.use('/api/servicos', servicoRoutes);
 app.use(errorMiddleware);
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando com sucesso em http://localhost:${PORT}`);
+  console.log(` Servidor rodando com sucesso em http://localhost:${PORT}`);
 });
