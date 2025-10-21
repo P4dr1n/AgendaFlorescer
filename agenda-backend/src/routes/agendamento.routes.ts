@@ -4,20 +4,21 @@ import { Router } from 'express';
 import { AgendamentoController } from '../controllers/agendamento.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 import { adminMiddleware } from '../middlewares/admin.middleware';
-import { validate } from '../middlewares/validate.middleware';
-import { criarAgendamentoSchema } from '../schemas/agendamento.schema';
 
 const agendamentoRoutes = Router();
 const agendamentoController = new AgendamentoController();
 
-agendamentoRoutes.use(authMiddleware);
+// ✅ NOVA ROTA PÚBLICA (ou pode ser protegida se preferir)
+// Para listar horários disponíveis
+agendamentoRoutes.get('/disponibilidade', agendamentoController.listarDisponibilidade);
 
-// Aplica a validação à rota de criação de agendamento
-agendamentoRoutes.post('/', validate(criarAgendamentoSchema), agendamentoController.criarAgendamento);
-agendamentoRoutes.get('/', agendamentoController.listarAgendamentos);
-agendamentoRoutes.patch('/:id/cancelar', agendamentoController.cancelarAgendamento);
+// --- ROTAS DE CLIENTE (requerem apenas login) ---
+agendamentoRoutes.post('/', authMiddleware, agendamentoController.criarAgendamento);
+agendamentoRoutes.get('/', authMiddleware, agendamentoController.listarAgendamentos); // Lista os MEUS agendamentos
+agendamentoRoutes.patch('/:id/cancelar', authMiddleware, agendamentoController.cancelarAgendamento);
 
-agendamentoRoutes.get('/todos', adminMiddleware, agendamentoController.listarTodosAgendamentos);
-agendamentoRoutes.patch('/:id/status', adminMiddleware, agendamentoController.atualizarStatusAgendamento);
+// --- ROTAS DE ADMIN (requerem login + permissão de admin) ---
+agendamentoRoutes.get('/todos', authMiddleware, adminMiddleware, agendamentoController.listarTodosAgendamentos);
+agendamentoRoutes.patch('/:id/status', authMiddleware, adminMiddleware, agendamentoController.atualizarStatusAgendamento);
 
 export default agendamentoRoutes;
