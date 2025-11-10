@@ -49,7 +49,7 @@ export default function LoginScreen() {
   const handleNavigateToRegister = () => {
     // Só navega se não estiver em processo de login
     if (!isLoading) {
-      router.push("/register");
+      router.push("/(telasCliente)/home");
     }
   };
 

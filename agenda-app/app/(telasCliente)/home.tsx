@@ -4,8 +4,8 @@ import { useMemo } from "react"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-
+import { Alert, Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import { useAgendamentos } from "../../contexts/AgendamentosContexts"  // Import do contexto
 
 const SCREEN_WIDTH = Dimensions.get("window").width
 const H_PADDING = 24 
@@ -14,11 +14,49 @@ const ITEM_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GRID_GAP) / 2)
 
 export default function HomeClienteScreen() {
   const router = useRouter()
+  const { agendamentos, removerAgendamento } = useAgendamentos()  // Hook do contexto, incluindo removerAgendamento
 
-  const proximo = useMemo(
-    () => ({ servico: "Limpeza de Pele Avançada", profissional: "Joana", data: "Amanhã, 14/10", hora: "15:00" }),
-    [],
-  )
+  // Função para converter data e hora em timestamp (para ordenação)
+  const getTimestamp = (data: string, hora: string) => {
+    const [dia, mes, ano] = data.split('/').map(Number)
+    const [horas, minutos] = hora.split(':').map(Number)
+    return new Date(ano, mes - 1, dia, horas, minutos).getTime()
+  }
+
+  // Ordenar agendamentos por data e hora (mais próximo primeiro)
+  const agendamentosOrdenados = useMemo(() => {
+    return [...agendamentos].sort((a, b) => {
+      const timestampA = getTimestamp(a.data, a.hora)
+      const timestampB = getTimestamp(b.data, b.hora)
+      return timestampA - timestampB  // Ordem crescente (mais próximo primeiro)
+    })
+  }, [agendamentos])
+
+  // Pegar o agendamento mais próximo (primeiro da lista ordenada)
+  const proximo = agendamentosOrdenados.length > 0 ? agendamentosOrdenados[0] : null
+
+  // Função para lidar com o cancelamento
+  const handleCancelAgendamento = () => {
+    if (!proximo) return
+
+    Alert.alert(
+      "Cancelar Agendamento",
+      "Você realmente deseja cancelar a consulta? Se cancelar, haverá uma multa a pagar.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Confirmar",
+          style: "destructive",
+          onPress: () => {
+            removerAgendamento(proximo.id)  // Remove o agendamento pelo id
+          },
+        },
+      ]
+    )
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -34,62 +72,77 @@ export default function HomeClienteScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconCircle}>
-              <MaterialCommunityIcons name="calendar-clock" size={24} color="#FF4081" />
+        {/* Renderizar o card apenas se houver agendamento */}
+        {proximo ? (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="calendar-clock" size={24} color="#FF4081" />
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>Próximo Agendamento</Text>
+                <Text style={styles.cardSubtitle}>Detalhes da sua consulta</Text>
+              </View>
             </View>
-            <View style={styles.cardHeaderText}>
-              <Text style={styles.cardTitle}>Próximo Agendamento</Text>
-              <Text style={styles.cardSubtitle}>Detalhes da sua consulta</Text>
+
+            <View style={styles.cardDivider} />
+
+            <View style={styles.cardDetails}>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="spa" size={18} color="#951950" />
+                <Text style={styles.detailLabel}>Serviço</Text>
+              </View>
+              <Text style={styles.detailValue}>{proximo.servico}</Text>
             </View>
-          </View>
 
-          <View style={styles.cardDivider} />
-
-          <View style={styles.cardDetails}>
-            <View style={styles.detailRow}>
-              <MaterialCommunityIcons name="spa" size={18} color="#951950" />
-              <Text style={styles.detailLabel}>Serviço</Text>
+            <View style={styles.cardDetails}>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="account" size={18} color="#951950" />
+                <Text style={styles.detailLabel}>Profissional</Text>
+              </View>
+              <Text style={styles.detailValue}>{proximo.profissional}</Text>
             </View>
-            <Text style={styles.detailValue}>{proximo.servico}</Text>
-          </View>
 
-          <View style={styles.cardDetails}>
-            <View style={styles.detailRow}>
-              <MaterialCommunityIcons name="account" size={18} color="#951950" />
-              <Text style={styles.detailLabel}>Profissional</Text>
+            <View style={styles.cardDetails}>
+              <View style={styles.detailRow}>
+                <MaterialCommunityIcons name="clock-outline" size={18} color="#951950" />
+                <Text style={styles.detailLabel}>Data e Hora</Text>
+              </View>
+              <Text style={styles.detailValue}>
+                {proximo.data}, às {proximo.hora}
+              </Text>
             </View>
-            <Text style={styles.detailValue}>{proximo.profissional}</Text>
-          </View>
 
-          <View style={styles.cardDetails}>
-            <View style={styles.detailRow}>
-              <MaterialCommunityIcons name="clock-outline" size={18} color="#951950" />
-              <Text style={styles.detailLabel}>Data e Hora</Text>
+            <View style={styles.cardActions}>
+              <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={() => {}}>
+                <MaterialCommunityIcons name="calendar-edit" size={16} color="#FF4081" />
+                <Text style={styles.actionSecondaryText}>Remarcar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionBtn, styles.actionPrimary]} onPress={() => {}}>
+                <MaterialCommunityIcons name="map-marker" size={16} color="#FFFFFF" />
+                <Text style={styles.actionPrimaryText}>Como chegar</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.detailValue}>
-              {proximo.data}, às {proximo.hora}
-            </Text>
-          </View>
 
-          <View style={styles.cardActions}>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionSecondary]} onPress={() => {}}>
-              <MaterialCommunityIcons name="calendar-edit" size={16} color="#FF4081" />
-              <Text style={styles.actionSecondaryText}>Remarcar</Text>
+            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelAgendamento}>
+              <Text style={styles.cancelText}>Cancelar agendamento</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionPrimary]} onPress={() => {}}>
-              <MaterialCommunityIcons name="map-marker" size={16} color="#FFFFFF" />
-              <Text style={styles.actionPrimaryText}>Como chegar</Text>
-            </TouchableOpacity>
           </View>
+        ) : (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="calendar-clock" size={24} color="#FF4081" />
+              </View>
+              <View style={styles.cardHeaderText}>
+                <Text style={styles.cardTitle}>Nenhum Agendamento Próximo</Text>
+                <Text style={styles.cardSubtitle}>Agende um horário para começar!</Text>
+              </View>
+            </View>
+          </View>
+        )}
 
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => {}}>
-            <Text style={styles.cancelText}>Cancelar agendamento</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity style={styles.primaryCta} onPress={() => {}} activeOpacity={0.9}>
+        <TouchableOpacity style={styles.primaryCta} onPress={() => router.push("/agendar")} activeOpacity={0.9}>
           <MaterialCommunityIcons name="plus-circle" size={24} color="#FFFFFF" />
           <Text style={styles.primaryCtaText}>Agendar Novo Horário</Text>
         </TouchableOpacity>
@@ -99,7 +152,7 @@ export default function HomeClienteScreen() {
           <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={() => {}} />
           <QuickItem icon="spa" label="Nossos Serviços" onPress={() => {}} />
           <QuickItem icon="tag" label="Promoções" onPress={() => {}} />
-          <QuickItem icon="account-circle" label="Meu Perfil" onPress={() => {}} />
+          <QuickItem icon="account-circle" label="Meu Perfil" onPress={() => router.push("/PerfilCliente")} />
         </View>
       </ScrollView>
     </SafeAreaView>
