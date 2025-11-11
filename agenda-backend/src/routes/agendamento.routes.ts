@@ -16,9 +16,9 @@ agendamentoRoutes.get('/disponibilidade', agendamentoController.listarDisponibil
 agendamentoRoutes.post('/', authMiddleware, agendamentoController.criarAgendamento);
 agendamentoRoutes.get('/', authMiddleware, agendamentoController.listarAgendamentos); // Lista os MEUS agendamentos
 agendamentoRoutes.patch('/:id/cancelar', authMiddleware, agendamentoController.cancelarAgendamento);
-
+agendamentoRoutes.get('/horarios-disponiveis',authMiddleware,agendamentoController.listarHorariosDisponiveis);
 // --- ROTAS DE ADMIN (requerem login + permissão de admin) ---
 agendamentoRoutes.get('/todos', authMiddleware, adminMiddleware, agendamentoController.listarTodosAgendamentos);
 agendamentoRoutes.patch('/:id/status', authMiddleware, adminMiddleware, agendamentoController.atualizarStatusAgendamento);
-
+agendamentoRoutes.get('/profissional/:profissionalId',authMiddleware,agendamentoController.listarPorProfissional);
 export default agendamentoRoutes;

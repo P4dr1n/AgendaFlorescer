@@ -13,12 +13,50 @@ export class AgendamentoController {
 
   // listarTodosAgendamentos, atualizarStatusAgendamento (Admin - sem alterações)
   public listarTodosAgendamentos = async (req: Request, res: Response, next: NextFunction): Promise<void> => { try { const agendamentos = await this.agendamentoService.listarTodos(); res.status(200).json(agendamentos); } catch (error: any) { next(error); } };
-  public atualizarStatusAgendamento = async (req: Request, res: Response, next: NextFunction): Promise<void> => { try { const { id } = req.params; const { status } = req.body; if (!status) { res.status(400).json({ message: 'O novo status é obrigatório.' }); return; } const agendamento = await this.agendamentoService.atualizarStatus(id, status); res.status(200).json(agendamento); } catch (error: any) { next(error); } };
+  public atualizarStatusAgendamento = async (
+    req: Request, 
+    res: Response, 
+    next: NextFunction): Promise<void> => { 
+      try 
+      { 
+       const { id } = req.params; 
+       const { status } = req.body; 
+       
+       if (!status) { 
+        res.status(400).json({ message: 'O novo status é obrigatório.' }); 
+        return; 
+      } 
+      const agendamento = await this.agendamentoService.atualizarStatus(id, status); 
+      res.status(200).json(agendamento); } 
+      catch (error: any) { next(error); } 
+    };
 
 
-  /**
-   * NOVO MÉTODO: Lista os horários disponíveis para um serviço em uma data.
-   */
+  public listarHorariosDisponiveis = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { data, servicoId } = req.query;
+
+    if (!data || !servicoId) {
+      res.status(400).json({ 
+        message: 'Parâmetros "data" (YYYY-MM-DD) e "servicoId" são obrigatórios' 
+      });
+      return;
+    }
+
+    const horarios = await this.agendamentoService.listarHorariosDisponiveis(
+      data as string,
+      servicoId as string
+    );
+
+    res.json(horarios);
+  } catch (error) {
+    next(error);
+  };
+}
   public listarDisponibilidade = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { data, servicoId } = req.query; // Pega os parâmetros da URL (?data=...&servicoId=...)
@@ -37,5 +75,26 @@ export class AgendamentoController {
     } catch (error) {
       next(error); // Deixa o middleware de erro tratar
     }
+    
   };
+  public listarPorProfissional = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { profissionalId } = req.params;
+    const { data } = req.query; // Opcional: filtrar por data específica
+
+    const agendamentos = await this.agendamentoService.listarPorProfissional(
+      profissionalId,
+      data as string | undefined
+    );
+
+    res.json(agendamentos);
+  } catch (error) {
+    next(error);
+  }
+};
+  
 }

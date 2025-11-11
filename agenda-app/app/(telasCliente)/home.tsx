@@ -1,61 +1,156 @@
-"use client"
+// agenda-app/app/(telasCliente)/home.tsx
 
-import { useMemo } from "react"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Alert, Dimensions, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { useAgendamentos } from "../../contexts/AgendamentosContexts"  // Import do contexto
+"use client";
 
-const SCREEN_WIDTH = Dimensions.get("window").width
-const H_PADDING = 24 
-const GRID_GAP = 12
-const ITEM_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GRID_GAP) / 2)
+import { useMemo, useState, useEffect } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from '@react-navigation/native'; // ✅ ADICIONE ESTE IMPORT
+import {
+  Alert,
+  Dimensions,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
+import api from "../../services/api";
+import { useUser } from "../../contexts/UserContext";
+import { useCallback } from "react"; // ✅ ADICIONE ESTE IMPORT
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const H_PADDING = 24;
+const GRID_GAP = 12;
+const ITEM_WIDTH = Math.floor((SCREEN_WIDTH - H_PADDING * 2 - GRID_GAP) / 2);
+
+interface Servico {
+  nome: string;
+  duracao: number;
+  preco: number;
+}
+
+interface Profissional {
+  nome: string;
+}
+
+interface Agendamento {
+  id: string;
+  data: string;
+  status: string;
+  servico: Servico;
+  profissional: Profissional;
+}
 
 export default function HomeClienteScreen() {
-  const router = useRouter()
-  const { agendamentos, removerAgendamento } = useAgendamentos()  // Hook do contexto, incluindo removerAgendamento
+  const router = useRouter();
+  const { user } = useUser();
 
-  // Função para converter data e hora em timestamp (para ordenação)
-  const getTimestamp = (data: string, hora: string) => {
-    const [dia, mes, ano] = data.split('/').map(Number)
-    const [horas, minutos] = hora.split(':').map(Number)
-    return new Date(ano, mes - 1, dia, horas, minutos).getTime()
-  }
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Ordenar agendamentos por data e hora (mais próximo primeiro)
+  // ✅ SUBSTITUA useEffect por useFocusEffect
+  useFocusEffect(
+    useCallback(() => {
+      carregarAgendamentos();
+    }, [])
+  );
+
+  const carregarAgendamentos = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/api/agendamentos");
+      console.log('✅ Agendamentos carregados:', response.data.length);
+      setAgendamentos(response.data);
+    } catch (error) {
+      console.error("Erro ao carregar agendamentos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTimestamp = (dataISO: string) => {
+    return new Date(dataISO).getTime();
+  };
+
   const agendamentosOrdenados = useMemo(() => {
-    return [...agendamentos].sort((a, b) => {
-      const timestampA = getTimestamp(a.data, a.hora)
-      const timestampB = getTimestamp(b.data, b.hora)
-      return timestampA - timestampB  // Ordem crescente (mais próximo primeiro)
-    })
-  }, [agendamentos])
+    return [...agendamentos]
+      .filter((ag) => ag.status !== "CANCELADO")
+      .sort((a, b) => {
+        const timestampA = getTimestamp(a.data);
+        const timestampB = getTimestamp(b.data);
+        return timestampA - timestampB;
+      });
+  }, [agendamentos]);
 
-  // Pegar o agendamento mais próximo (primeiro da lista ordenada)
-  const proximo = agendamentosOrdenados.length > 0 ? agendamentosOrdenados[0] : null
+  const proximo = agendamentosOrdenados.length > 0 ? agendamentosOrdenados[0] : null;
 
-  // Função para lidar com o cancelamento
-  const handleCancelAgendamento = () => {
-    if (!proximo) return
+  const formatarData = (dataISO: string) => {
+    const data = new Date(dataISO);
+    return data.toLocaleDateString("pt-BR");
+  };
+
+  const formatarHora = (dataISO: string) => {
+    const data = new Date(dataISO);
+    return data.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleCancelAgendamento = async () => {
+    if (!proximo) return;
 
     Alert.alert(
       "Cancelar Agendamento",
-      "Você realmente deseja cancelar a consulta? Se cancelar, haverá uma multa a pagar.",
+      "Você realmente deseja cancelar este agendamento?",
       [
         {
-          text: "Cancelar",
+          text: "Não",
           style: "cancel",
         },
         {
-          text: "Confirmar",
+          text: "Sim, Cancelar",
           style: "destructive",
-          onPress: () => {
-            removerAgendamento(proximo.id)  // Remove o agendamento pelo id
+          onPress: async () => {
+            try {
+              await api.patch(`/api/agendamentos/${proximo.id}/cancelar`);
+              Alert.alert("Sucesso", "Agendamento cancelado com sucesso");
+              carregarAgendamentos(); // Recarrega
+            } catch (error) {
+              Alert.alert("Erro", "Não foi possível cancelar o agendamento");
+            }
           },
         },
       ]
-    )
+    );
+  };
+
+  const navegarParaAgendaProfissional = () => {
+    if (user?.role === "ADMIN") {
+      router.push("/(telasCliente)/AgendaProfissional" as any);
+    } else {
+      Alert.alert(
+        "Acesso Negado",
+        "Esta funcionalidade está disponível apenas para administradores."
+      );
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#FF4081" />
+          <Text style={{ marginTop: 12, color: "#951950", fontSize: 16 }}>
+            Carregando...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -65,14 +160,13 @@ export default function HomeClienteScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.hello}>Olá,</Text>
-            <Text style={styles.userName}>Cliente</Text>
+            <Text style={styles.userName}>{user?.usuario || "Cliente"}</Text>
           </View>
           <TouchableOpacity style={styles.iconButton} onPress={() => {}} activeOpacity={0.8}>
             <MaterialCommunityIcons name="bell-outline" size={24} color="#FF4081" />
           </TouchableOpacity>
         </View>
 
-        {/* Renderizar o card apenas se houver agendamento */}
         {proximo ? (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -92,7 +186,7 @@ export default function HomeClienteScreen() {
                 <MaterialCommunityIcons name="spa" size={18} color="#951950" />
                 <Text style={styles.detailLabel}>Serviço</Text>
               </View>
-              <Text style={styles.detailValue}>{proximo.servico}</Text>
+              <Text style={styles.detailValue}>{proximo.servico.nome}</Text>
             </View>
 
             <View style={styles.cardDetails}>
@@ -100,7 +194,7 @@ export default function HomeClienteScreen() {
                 <MaterialCommunityIcons name="account" size={18} color="#951950" />
                 <Text style={styles.detailLabel}>Profissional</Text>
               </View>
-              <Text style={styles.detailValue}>{proximo.profissional}</Text>
+              <Text style={styles.detailValue}>{proximo.profissional.nome}</Text>
             </View>
 
             <View style={styles.cardDetails}>
@@ -109,7 +203,7 @@ export default function HomeClienteScreen() {
                 <Text style={styles.detailLabel}>Data e Hora</Text>
               </View>
               <Text style={styles.detailValue}>
-                {proximo.data}, às {proximo.hora}
+                {formatarData(proximo.data)}, às {formatarHora(proximo.data)}
               </Text>
             </View>
 
@@ -142,7 +236,11 @@ export default function HomeClienteScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.primaryCta} onPress={() => router.push("/agendar")} activeOpacity={0.9}>
+        <TouchableOpacity
+          style={styles.primaryCta}
+          onPress={() => router.push("/(telasCliente)/agendar")}
+          activeOpacity={0.9}
+        >
           <MaterialCommunityIcons name="plus-circle" size={24} color="#FFFFFF" />
           <Text style={styles.primaryCtaText}>Agendar Novo Horário</Text>
         </TouchableOpacity>
@@ -152,11 +250,23 @@ export default function HomeClienteScreen() {
           <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={() => {}} />
           <QuickItem icon="spa" label="Nossos Serviços" onPress={() => {}} />
           <QuickItem icon="tag" label="Promoções" onPress={() => {}} />
-          <QuickItem icon="account-circle" label="Meu Perfil" onPress={() => router.push("/PerfilCliente")} />
+          <QuickItem
+            icon="account-circle"
+            label="Meu Perfil"
+            onPress={() => router.push("/(telasCliente)/PerfilCliente")}
+          />
+
+          {user?.role === "ADMIN" && (
+            <QuickItem
+              icon="clipboard-text"
+              label="Agenda Profissional"
+              onPress={navegarParaAgendaProfissional}
+            />
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 function QuickItem({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
@@ -167,7 +277,7 @@ function QuickItem({ icon, label, onPress }: { icon: any; label: string; onPress
       </View>
       <Text style={styles.quickLabel}>{label}</Text>
     </TouchableOpacity>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -188,13 +298,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   hello: {
-    color: "#951950", 
+    color: "#951950",
     fontSize: 16,
     fontWeight: "500",
     letterSpacing: 0.3,
   },
   userName: {
-    color: "#951950", 
+    color: "#951950",
     fontSize: 32,
     fontWeight: "700",
     letterSpacing: -0.5,
@@ -206,19 +316,19 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF", 
-    shadowColor: "#FF4081", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#FF4081",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 4,
   },
   card: {
-    backgroundColor: "#FFFFFF", 
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 24,
     gap: 16,
-    shadowColor: "#951950", 
+    shadowColor: "#951950",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
@@ -233,7 +343,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#ffe4ff", 
+    backgroundColor: "#ffe4ff",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -242,19 +352,19 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   cardTitle: {
-    color: "#951950", 
+    color: "#951950",
     fontWeight: "700",
     fontSize: 20,
     letterSpacing: -0.3,
   },
   cardSubtitle: {
-    color: "#cba2ae", 
+    color: "#cba2ae",
     fontSize: 14,
     fontWeight: "500",
   },
   cardDivider: {
     height: 1,
-    backgroundColor: "#f5c9d6", 
+    backgroundColor: "#f5c9d6",
     marginVertical: 4,
   },
   cardDetails: {
@@ -266,7 +376,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailLabel: {
-    color: "#951950", 
+    color: "#951950",
     fontSize: 13,
     fontWeight: "600",
     textTransform: "uppercase",
@@ -304,15 +414,15 @@ const styles = StyleSheet.create({
     borderColor: "#FF80AB",
   },
   actionSecondaryText: {
-    color: "#FF4081", 
+    color: "#FF4081",
     fontWeight: "700",
     fontSize: 14,
   },
   actionPrimary: {
-    backgroundColor: "#FF4081", 
+    backgroundColor: "#FF4081",
   },
   actionPrimaryText: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontWeight: "700",
     fontSize: 14,
   },
@@ -321,13 +431,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   cancelText: {
-    color: "#cba2ae", 
+    color: "#cba2ae",
     fontSize: 14,
     fontWeight: "600",
     textDecorationLine: "underline",
   },
   primaryCta: {
-    backgroundColor: "#FF4081", 
+    backgroundColor: "#FF4081",
     borderRadius: 20,
     paddingVertical: 18,
     paddingHorizontal: 24,
@@ -342,13 +452,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   primaryCtaText: {
-    color: "#FFFFFF", 
+    color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "800",
     letterSpacing: 0.3,
   },
   sectionTitle: {
-    color: "#951950", 
+    color: "#951950",
     fontSize: 20,
     fontWeight: "700",
     letterSpacing: -0.3,
@@ -363,12 +473,12 @@ const styles = StyleSheet.create({
   quickItem: {
     width: ITEM_WIDTH,
     marginBottom: 14,
-    backgroundColor: "#FFFFFF", 
+    backgroundColor: "#FFFFFF",
     borderRadius: 20,
     padding: 20,
     gap: 12,
     alignItems: "center",
-    shadowColor: "#951950", 
+    shadowColor: "#951950",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -380,13 +490,13 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffe4ff", 
+    backgroundColor: "#ffe4ff",
   },
   quickLabel: {
-    color: "#951950", 
+    color: "#951950",
     fontWeight: "700",
     fontSize: 14,
     textAlign: "center",
     letterSpacing: 0.2,
   },
-})
+});

@@ -130,5 +130,44 @@ export class AgendamentoService {
   public async cancelar(agendamentoId: string, clienteId: string): Promise<Agendamento & { servico: Servico, profissional: Profissional }> { const ag = await prisma.agendamento.findUnique({where: {id: agendamentoId}}); if (!ag) throw new Error('Agendamento não encontrado.'); if (ag.clienteId !== clienteId) throw new Error('Não autorizado a cancelar este agendamento.'); return prisma.agendamento.update({ where: { id: agendamentoId }, data: { status: 'CANCELADO' }, include: { servico: true, profissional: true } }); }
   public async listarTodos(): Promise<(Agendamento & { servico: Servico, profissional: Profissional, cliente: Pick<User, 'id' | 'usuario' | 'email'> })[]> { return prisma.agendamento.findMany({ include: { cliente: { select: { id: true, usuario: true, email: true } }, servico: true, profissional: true }, orderBy: { data: 'desc' } }); }
   public async atualizarStatus(agendamentoId: string, status: string): Promise<Agendamento & { servico: Servico, profissional: Profissional, cliente: Pick<User, 'id' | 'usuario'> }> { const statusValidos = ['PENDENTE', 'CONFIRMADO', 'CANCELADO', 'CONCLUIDO']; const statusUpper = status.toUpperCase(); if (!statusValidos.includes(statusUpper)) throw new Error(`Status inválido.`); return prisma.agendamento.update({ where: { id: agendamentoId }, data: { status: statusUpper }, include: { servico: true, profissional: true, cliente: { select: { id: true, usuario: true }} } }); }
-  public async listarHorariosDisponiveis(dataConsulta: string, servicoId: string): Promise<string[]> { const data = new Date(`${dataConsulta}T00:00:00.000Z`); if (isNaN(data.getTime())) throw new Error('Formato de data inválido. Use AAAA-MM-DD.'); const servico = await prisma.servico.findUnique({ where: { id: servicoId } }); if (!servico) throw new Error('Serviço não encontrado.'); const diaDaSemanaJS = data.getUTCDay(); const diaDaSemanaEnum = jsDayToEnumMap[diaDaSemanaJS]; const horarioDoDia = await prisma.horarioFuncionamento.findUnique({ where: { diaSemana: diaDaSemanaEnum } }); if (!horarioDoDia || !horarioDoDia.aberto) return []; const inicioDiaUTC = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate())); const fimDiaUTC = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate() + 1)); const agendamentosDoDia = await prisma.agendamento.findMany({ where: { status: { not: 'CANCELADO' }, data: { gte: inicioDiaUTC, lt: fimDiaUTC } }, include: { servico: true } }); const [aberturaH, aberturaM] = horarioDoDia.abertura.split(':').map(Number); const [fechoH, fechoM] = horarioDoDia.fecho.split(':').map(Number); const minutoAbertura = aberturaH * 60 + aberturaM; const minutoFecho = fechoH * 60 + fechoM; const duracaoServico = servico.duracao; const horariosDisponiveis: string[] = []; const intervaloMinutos = 15; const agora = new Date(); for (let minutoAtual = minutoAbertura; minutoAtual < minutoFecho; minutoAtual += intervaloMinutos) { const horaInicioPotencial = new Date(inicioDiaUTC); horaInicioPotencial.setUTCMinutes(minutoAtual); const horaFimPotencial = new Date(horaInicioPotencial.getTime() + duracaoServico * 60000); const minutoFimPotencial = horaFimPotencial.getUTCHours() * 60 + horaFimPotencial.getUTCMinutes(); if (minutoFimPotencial > minutoFecho || horaFimPotencial.getUTCDate() !== inicioDiaUTC.getUTCDate()) continue; if (inicioDiaUTC.toDateString() === agora.toDateString() && horaInicioPotencial < agora) continue; const temConflito = agendamentosDoDia.some(ag => { const agInicio = ag.data; const agFim = new Date(agInicio.getTime() + ag.servico.duracao * 60000); return horaInicioPotencial < agFim && horaFimPotencial > agInicio; }); if (!temConflito) { const horaStr = horaInicioPotencial.getUTCHours().toString().padStart(2, '0'); const minutoStr = horaInicioPotencial.getUTCMinutes().toString().padStart(2, '0'); horariosDisponiveis.push(`${horaStr}:${minutoStr}`); } } return horariosDisponiveis; }
+  public async listarHorariosDisponiveis(dataConsulta: string, servicoId: string): Promise<string[]> { const data = new Date(`${dataConsulta}T00:00:00.000Z`); if (isNaN(data.getTime())) throw new Error('Formato de data inválido. Use AAAA-MM-DD.'); const servico = await prisma.servico.findUnique({ where: { id: servicoId } }); if (!servico) throw new Error('Serviço não encontrado.'); const diaDaSemanaJS = data.getUTCDay(); const diaDaSemanaEnum = jsDayToEnumMap[diaDaSemanaJS]; const horarioDoDia = await prisma.horarioFuncionamento.findUnique({ where: { diaSemana: diaDaSemanaEnum } }); if (!horarioDoDia || !horarioDoDia.aberto) return []; const inicioDiaUTC = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate())); const fimDiaUTC = new Date(Date.UTC(data.getUTCFullYear(), data.getUTCMonth(), data.getUTCDate() + 1)); const agendamentosDoDia = await prisma.agendamento.findMany({ where: { status: { not: 'CANCELADO' }, data: { gte: inicioDiaUTC, lt: fimDiaUTC } }, include: { servico: true } }); const [aberturaH, aberturaM] = horarioDoDia.abertura.split(':').map(Number); const [fechoH, fechoM] = horarioDoDia.fecho.split(':').map(Number); const minutoAbertura = aberturaH * 60 + aberturaM; const minutoFecho = fechoH * 60 + fechoM; const duracaoServico = servico.duracao; const horariosDisponiveis: string[] = []; const intervaloMinutos = 15; const agora = new Date(); for (let minutoAtual = minutoAbertura; minutoAtual < minutoFecho; minutoAtual += intervaloMinutos) { const horaInicioPotencial = new Date(inicioDiaUTC); horaInicioPotencial.setUTCMinutes(minutoAtual); const horaFimPotencial = new Date(horaInicioPotencial.getTime() + duracaoServico * 60000); const minutoFimPotencial = horaFimPotencial.getUTCHours() * 60 + horaFimPotencial.getUTCMinutes(); if (minutoFimPotencial > minutoFecho || horaFimPotencial.getUTCDate() !== inicioDiaUTC.getUTCDate()) continue; if (inicioDiaUTC.toDateString() === agora.toDateString() && horaInicioPotencial < agora) continue; const temConflito = agendamentosDoDia.some(ag => { const agInicio = ag.data; const agFim = new Date(agInicio.getTime() + ag.servico.duracao * 60000); return horaInicioPotencial < agFim && horaFimPotencial > agInicio; }); if (!temConflito) { const horaStr = horaInicioPotencial.getUTCHours().toString().padStart(2, '0'); const minutoStr = horaInicioPotencial.getUTCMinutes().toString().padStart(2, '0'); horariosDisponiveis.push(`${horaStr}:${minutoStr}`); } } return horariosDisponiveis; 
+}
+ public async listarPorProfissional(
+  profissionalId: string,
+  data?: string
+): Promise<(Agendamento & { 
+  servico: Servico, 
+  cliente: Pick<User, 'id' | 'usuario' | 'telefone' | 'email'> 
+})[]> {
+  
+  const where: any = {
+    profissionalId: profissionalId,
+  };
+
+  // Se uma data foi fornecida, filtra por ela
+  if (data) {
+    const dataInicio = new Date(`${data}T00:00:00.000Z`);
+    const dataFim = new Date(`${data}T23:59:59.999Z`);
+    where.data = {
+      gte: dataInicio,
+      lte: dataFim,
+    };
+  }
+
+  return prisma.agendamento.findMany({
+    where,
+    include: {
+      servico: true,
+      cliente: {
+        select: {
+          id: true,
+          usuario: true,
+          telefone: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: { data: 'asc' },
+  });
+}
 }

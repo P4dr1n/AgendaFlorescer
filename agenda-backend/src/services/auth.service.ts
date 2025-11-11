@@ -33,6 +33,24 @@ export class AuthService {
 
     return token;
   }
+   public async getProfile(userId: string): Promise<Pick<User, 'id' | 'usuario' | 'email' | 'telefone' | 'role'>> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        usuario: true,
+        email: true,
+        telefone: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    return user;
+  }
 
   public async register(data: RegisterData): Promise<Omit<User, 'senhaHash'>> {
     const senhaHash = await bcrypt.hash(data.senha, 10);
@@ -45,6 +63,7 @@ export class AuthService {
         telefone: data.telefone,
       },
     });
+    
 
     const { senhaHash: _, ...userSemSenha } = novoUsuario;
     return userSemSenha;

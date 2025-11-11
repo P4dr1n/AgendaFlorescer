@@ -1,41 +1,58 @@
-import React, { createContext, useContext, useState } from "react"
+// agenda-app/contexts/UserContext.tsx
+
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import * as SecureStore from 'expo-secure-store';
+import api from '../services/api';
 
 interface User {
-  nome: string
-  email: string
-  telefone: string
-  senha: string
+  id: string;
+  usuario: string;
+  role: string;
+  email: string;
 }
 
-interface UserContextType {
-  user: User
-  setUser: (user: User) => void
-  atualizarUsuario: (dadosAtualizados: Partial<User>) => void
+interface UserContextData {
+  user: User | null;
+  loading: boolean;
+  loadUser: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined)
+const UserContext = createContext<UserContextData>({} as UserContextData);
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User>({
-    nome: "Gabriel Marques",
-    email: "gabriel@email.com",
-    telefone: "(11) 99999-9999",
-    senha: "123456",
-  })
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const atualizarUsuario = (dadosAtualizados: Partial<User>) => {
-    setUser((prev) => ({ ...prev, ...dadosAtualizados }))
-  }
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const loadUser = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('userToken');
+      if (token) {
+        const response = await api.get('/api/auth/me');
+        setUser(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar usuário:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    await SecureStore.deleteItemAsync('userToken');
+    setUser(null);
+  };
 
   return (
-    <UserContext.Provider value={{ user, setUser, atualizarUsuario }}>
+    <UserContext.Provider value={{ user, loading, loadUser, logout }}>
       {children}
     </UserContext.Provider>
-  )
+  );
 }
 
-export function useUser() {
-  const context = useContext(UserContext)
-  if (!context) throw new Error("useUser deve ser usado dentro de UserProvider")
-  return context
-}
+export const useUser = () => useContext(UserContext);
