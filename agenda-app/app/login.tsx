@@ -23,8 +23,9 @@ export default function LoginScreen() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const router = useRouter();
-  const { loadUser } = useUser();
+  const { loadUser, user } = useUser(); // ✅ Pegar o user também
 
   const handleLogin = async () => {
     if (!usuario.trim() || !senha.trim()) {
@@ -50,9 +51,43 @@ export default function LoginScreen() {
       }
 
       await SecureStore.setItemAsync("userToken", token);
-      await loadUser(); // Carrega dados do usuário
+      await loadUser(); // Carrega os dados do usuário
+      
+      // Aguardar um pouco para o contexto atualizar
+      await new Promise(resolve => setTimeout(resolve, 200));
 
-      router.replace("/(telasCliente)/home");
+      // Tentar pegar role de várias formas
+      let userRole = "CLIENTE";
+      
+      // 1. Tentar do response direto
+      if (response.data.user?.role) {
+        userRole = response.data.user.role;
+      } 
+      // 2. Tentar do contexto após loadUser
+      else if (user?.role) {
+        userRole = user.role;
+      }
+      // 3. Tentar buscar via API
+      else {
+        try {
+          const meResponse = await api.get("/api/auth/me");
+          userRole = meResponse.data.role || "CLIENTE";
+        } catch (e) {
+          console.log("Não foi possível buscar role via /me");
+        }
+      }
+
+      console.log("Role detectado:", userRole);
+
+      // Redirecionar baseado no role
+      if (userRole === "ADMIN" || userRole === "admin" || userRole === "ADMINISTRADOR") {
+        console.log("Redirecionando para admin...");
+        router.replace("/(telasAdmin)/dashboard");
+      } else {
+        console.log("Redirecionando para cliente...");
+        router.replace("/(telasCliente)/home");
+      }
+
     } catch (error: any) {
       console.error("Erro no login:", error);
 
@@ -87,8 +122,9 @@ export default function LoginScreen() {
           <View style={styles.iconContainer}>
             <MaterialCommunityIcons name="calendar-clock" size={48} color="#FFF" />
           </View>
-          <Text style={styles.title}>Agendamento</Text>
+          <Text style={styles.title}>Florescer</Text>
           <Text style={styles.subtitle}>Entre na sua conta</Text>
+          
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Usuário</Text>
             <TextInput
@@ -101,18 +137,33 @@ export default function LoginScreen() {
               editable={!isLoading}
             />
           </View>
+          
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Senha</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite sua senha"
-              placeholderTextColor="rgba(255, 255, 255, 0.5)"
-              secureTextEntry
-              value={senha}
-              onChangeText={setSenha}
-              editable={!isLoading}
-            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Digite sua senha"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                secureTextEntry={!mostrarSenha}
+                value={senha}
+                onChangeText={setSenha}
+                editable={!isLoading}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setMostrarSenha(!mostrarSenha)}
+                disabled={isLoading}
+              >
+                <MaterialCommunityIcons
+                  name={mostrarSenha ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="rgba(255, 255, 255, 0.7)"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
+          
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.primaryButton]}
@@ -193,6 +244,24 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    color: "#FFF",
+  },
+  eyeButton: {
+    padding: 16,
   },
   buttonContainer: {
     width: "100%",

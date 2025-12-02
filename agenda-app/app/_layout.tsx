@@ -13,6 +13,7 @@ export default function RootLayout() {
       <Stack.Screen name="modal"  options={{ headerShown: false }}/>
       {/* Atualizado de (tabs) para (telasCliente) */}
       <Stack.Screen name="(telasCliente)" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="(telasAdmin)" options={{ headerShown: false,animation: 'slide_from_bottom'}} />
     </Stack>
     </AgendamentosProvider>
     </UserProvider>
