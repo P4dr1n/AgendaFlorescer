@@ -103,26 +103,56 @@ export default function PerfilCliente() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Opções</Text>
+          <Text style={styles.sectionTitle}>Agendamentos</Text>
           
-          {user.role === 'ADMIN' && (
+          <ActionItem
+            icon="calendar-plus"
+            label="Novo Agendamento"
+            onPress={() => router.push("/(telasCliente)/agendar")}
+          />
+          
+          <ActionItem
+            icon="calendar-month"
+            label="Meus Agendamentos"
+            onPress={() => router.push("/(telasCliente)/MeusAgendamentos")}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Serviços</Text>
+          
+          <ActionItem
+            icon="spa"
+            label="Nossos Serviços"
+            onPress={() => router.push("/(telasCliente)/NossosServicos")}
+          />
+          
+          <ActionItem
+            icon="tag-heart"
+            label="Promoções"
+            onPress={() => router.push("/(telasCliente)/Promocoes")}
+          />
+        </View>
+
+        {user.role === 'ADMIN' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Administração</Text>
+            
             <ActionItem
               icon="clipboard-text"
               label="Agenda Profissional"
               onPress={() => router.push("/(telasCliente)/AgendaProfissional" as any)}
             />
-          )}
-          
-          <ActionItem
-            icon="calendar-month"
-            label="Meus Agendamentos"
-            onPress={() => router.push("/(telasCliente)/home")}
-          />
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Conta</Text>
           
           <ActionItem
             icon="cog-outline"
             label="Configurações"
-            onPress={() => Alert.alert("Em breve", "Funcionalidade em desenvolvimento")}
+            onPress={() => router.push("/(telasCliente)/Configuracao")}
           />
           
           <View style={styles.divider} />
@@ -137,6 +167,7 @@ export default function PerfilCliente() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>AgendaFlorescer v1.0.0</Text>
+          <Text style={styles.footerSubtext}>Estética Naturalista e Paliativa</Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -299,10 +330,16 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: "center",
     paddingTop: 16,
+    gap: 4,
   },
   footerText: {
+    color: "#951950",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  footerSubtext: {
     color: "#cba2ae",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "500",
   },
 });

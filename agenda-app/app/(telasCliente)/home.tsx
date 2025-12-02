@@ -247,9 +247,21 @@ export default function HomeClienteScreen() {
 
         <Text style={styles.sectionTitle}>Acesso Rápido</Text>
         <View style={styles.quickGrid}>
-          <QuickItem icon="calendar-month" label="Meus Agendamentos" onPress={() => {}} />
-          <QuickItem icon="spa" label="Nossos Serviços" onPress={() => {}} />
-          <QuickItem icon="tag" label="Promoções" onPress={() => {}} />
+          <QuickItem 
+            icon="calendar-month" 
+            label="Meus Agendamentos" 
+            onPress={() => router.push("/(telasCliente)/MeusAgendamentos")} 
+          />
+          <QuickItem 
+            icon="spa" 
+            label="Nossos Serviços" 
+            onPress={() => router.push("/(telasCliente)/NossosServicos")} 
+          />
+          <QuickItem 
+            icon="tag" 
+            label="Promoções" 
+            onPress={() => router.push("/(telasCliente)/Promocoes")} 
+          />
           <QuickItem
             icon="account-circle"
             label="Meu Perfil"
