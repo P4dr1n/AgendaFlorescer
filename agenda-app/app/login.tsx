@@ -25,7 +25,7 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const router = useRouter();
-  const { loadUser, user } = useUser(); // ✅ Pegar o user também
+  const { loadUser } = useUser();
 
   const handleLogin = async () => {
     if (!usuario.trim() || !senha.trim()) {
@@ -35,14 +35,15 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      console.log("Tentando fazer login com:", { usuario });
+      console.log("🔐 Tentando fazer login com:", { usuario });
 
+      // 1️⃣ Fazer login e receber token
       const response = await api.post("/api/auth/login", {
         usuario: usuario.trim(),
         senha,
       });
 
-      console.log("Login bem-sucedido:", response.data);
+      console.log("✅ Login bem-sucedido:", response.data);
 
       const { token } = response.data;
 
@@ -50,56 +51,44 @@ export default function LoginScreen() {
         throw new Error("Token não recebido do servidor");
       }
 
+      // 2️⃣ Salvar token
       await SecureStore.setItemAsync("userToken", token);
-      await loadUser(); // Carrega os dados do usuário
-      
-      // Aguardar um pouco para o contexto atualizar
-      await new Promise(resolve => setTimeout(resolve, 200));
+      console.log("💾 Token salvo com sucesso");
 
-      // Tentar pegar role de várias formas
-      let userRole = "CLIENTE";
+      // 3️⃣ Carregar dados do usuário
+      const userData = await loadUser();
       
-      // 1. Tentar do response direto
-      if (response.data.user?.role) {
-        userRole = response.data.user.role;
-      } 
-      // 2. Tentar do contexto após loadUser
-      else if (user?.role) {
-        userRole = user.role;
-      }
-      // 3. Tentar buscar via API
-      else {
-        try {
-          const meResponse = await api.get("/api/auth/me");
-          userRole = meResponse.data.role || "CLIENTE";
-        } catch (e) {
-          console.log("Não foi possível buscar role via /me");
-        }
+      if (!userData) {
+        throw new Error("Não foi possível carregar os dados do usuário");
       }
 
-      console.log("Role detectado:", userRole);
+      console.log("👤 Usuário carregado:", userData);
 
-      // Redirecionar baseado no role
-      if (userRole === "ADMIN" || userRole === "admin" || userRole === "ADMINISTRADOR") {
-        console.log("Redirecionando para admin...");
+      // 4️⃣ Redirecionar baseado no role
+      if (userData.role === "ADMIN") {
+        console.log("🔀 Redirecionando para admin...");
         router.replace("/(telasAdmin)/dashboard");
       } else {
-        console.log("Redirecionando para cliente...");
+        console.log("🔀 Redirecionando para cliente...");
         router.replace("/(telasCliente)/home");
       }
 
     } catch (error: any) {
-      console.error("Erro no login:", error);
+      console.error("❌ Erro no login:", error);
 
       let errorMessage = "Não foi possível fazer login. Tente novamente.";
 
       if (error.response) {
+        console.error("Detalhes do erro:", error.response.data);
         errorMessage =
           error.response.data?.message ||
           `Erro ${error.response.status}: ${error.response.statusText}`;
       } else if (error.request) {
+        console.error("Erro de requisição:", error.request);
         errorMessage =
-          "Erro de conexão. Verifique se o servidor está rodando e sua conexão com a internet.";
+          "Erro de conexão. Verifique se o servidor está rodando.";
+      } else {
+        console.error("Erro:", error.message);
       }
 
       Alert.alert("❌ Erro no Login", errorMessage);
